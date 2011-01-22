@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [ $# -ne 2 ]; then
+	echo "setLabel <colour> <filepath>"
+	echo "Where <colour> is none, orange, red, yellow, blue, purple, green or gray"
+	exit
+fi
+
+osascript \
+-e "set file_alias to the POSIX file \"${1}\" as alias" \
+-e 'tell application "Finder" to set the label index of file_alias to 4' \
+> /dev/null
