@@ -1,40 +1,50 @@
 #!/bin/sh
 #Bilal Hussain
 
-showHelp () {
+usage () {
 	echo "Usage: `basename $0` <option>";
 	echo
 	echo "Options: (short)";
-	echo " (s) status        : Shows iTunes' status, and track info";
-	echo " (y) play          : Start playing.";
-	echo " (a) pause         : Pause iTunes.";
-	echo " (p) playpause     : Start playing / pauses.";
+	echo " (s) status          : Shows iTunes' status, and track info";
+	echo " (y) play            : Start playing.";
+	echo " (a) pause           : Pause iTunes.";
+	echo " (p) playpause       : Start playing / Pauses.";
+	echo                       
+	echo " (n) next            : Go to the next track.";
+	echo " (b) prev            : Go to the previous track.";
+	echo " (r) rewind          : Rewinds the current trac.";
+	echo                       
+	echo " (m) mute            : Mute iTunes' volume.";
+	echo " (m) unmute          : Unmute iTunes' volume.";
+	echo " (v) vol up          : Increase iTunes' volume by 10%";
+	echo " (v) vol down        : Increase iTunes' volume by 10%";
+	echo " (v) vol #           : Set iTunes' volume to # [0-100]";
 	echo                     
-	echo " (n) next          : Go to the next track.";
-	echo " (b) prev          : Go to the previous track.";
-	echo " (r) rewind        : Rewinds the current trac.";
+	echo " (@) search {string} : Search for songs (results playlist must exist)";
 	echo                     
-	echo " (m) mute          : Mute iTunes' volume.";
-	echo " (m) unmute        : Unmute iTunes' volume.";
-	echo " (v) vol up        : Increase iTunes' volume by 10%";
-	echo " (v) vol down      : Increase iTunes' volume by 10%";
-	echo " (v) vol #         : Set iTunes' volume to # [0-100]";
-	echo                     
-	echo " (l) playlist      : plays the specified playlist ";
-	echo " (d) random        : plays a random album";
-	echo                     
-	echo "     [0-5] {force} : Set the current song rating" ;
-	echo " (6) 4.5   {force} : Set the current song rating to 4½ stars" ;
-	echo                     
-	echo " (t) stop          : Stop iTunes.";
-	echo " (q) quit          : Quit iTunes.";
+	echo " (l) playlist        : List all the playlists";
+	echo " (l) playlist {name} : Plays the specified playlist ";
+	echo " (d) random          : Plays a random album";
+	echo " (f) shuffle         : Toggles shuffle";
+	echo " (f) shuffle on      : Turns shuffle on";
+	echo " (f) shuffle off     : Turns shuffle off";
+	
+	echo
+	echo "     [0-5] {force}  : Set the current song rating" ;
+	echo " (6) 4.5   {force}  : Set the current song rating to 4½ stars" ;
+	echo                      
+	echo " (t) stop           : Stop iTunes.";
+	echo " (q) quit           : Quit iTunes.";
 }
 
 #fixme shows error on end of playlist
 current_song(){
-	printf " Track: %s %s \n Album: %s\n Artist: %s\n" \
+	rating="`osascript -e 'tell application \"iTunes\" to rating of current track as string'`"
+	stars=$((rating/20));     # number of stars
+	half=$((rating%20 ==10)); # for half stars
+	printf " Track : %s %s \n Album : %s\n Artist: %s\n" \
 		"`osascript -e 'tell application \"iTunes\" to name of current track as string'`"\
-		"`osascript -e 'tell application \"iTunes\" to rating of current track as string'`"\
+		`ruby -e "print '★'*${stars}, '½'*${half}"`\
 		"`osascript -e 'tell application \"iTunes\" to album of current track as string'`"\
 		"`osascript -e 'tell application \"iTunes\" to artist of current track as string'`"
 }
@@ -48,7 +58,7 @@ state(){
 }
 
 if [ $# = 0 ]; then
-	showHelp;
+	usage;
 fi
 
 while [ $# -gt 0 ]; do
@@ -68,7 +78,11 @@ while [ $# -gt 0 ]; do
 		"pause" | "a" ) echo "Pausing iTunes.";
 			osascript -e 'tell application "iTunes" to pause';
 			break ;;
-
+		
+		"stop" | "t" ) echo "Stopping iTunes.";
+			osascript -e 'tell application "iTunes" to stop';
+			break ;;
+		
 		"next" | "n"  ) echo "Going to next track." ;
 			osascript -e 'tell application "iTunes" to next track';
 			current_song
@@ -86,19 +100,20 @@ while [ $# -gt 0 ]; do
 			break ;;
 
 		"vol" | "v"    ) echo "Changing iTunes volume level.";
-			vol=`osascript -e 'tell application "iTunes" to sound volume as integer'`;
-			if [ $2 = "up" ]; then
-				newvol=$(( vol+10 ));
-			fi
+			if [ $# -gt 1 ]; then
+				vol=`osascript -e 'tell application "iTunes"  to sound volume as integer'`;
+				if [ $2 = "up" ]; then
+					newvol=$(( vol+10 ));
 
-			if [ $2 = "down" ]; then
-				newvol=$(( vol-10 ));
-			fi
+				elif [ $2 = "down" ]; then
+					newvol=$(( vol-10 ));
 
-			if [ $2 -gt 0 ]; then
-				newvol=$2;
+				elif [ $2 -gt 0 ]; then
+					newvol=$2;
+				fi
+				osascript -e "tell application \"iTunes\" to set sound volume to $newvol";
 			fi
-			osascript -e "tell application \"iTunes\" to set sound volume to $newvol";
+			
 			break ;;
 		
 		"playlist" | l ) 
@@ -119,7 +134,43 @@ while [ $# -gt 0 ]; do
 				APPLESCRIPT
 			fi
 			break ;;
+			# spilt onto newline
+			# perl -pe  's/,/\n/g'
+			# puts 3 items on each line
+			# perl -e ' while (<>) { chomp if $. % 4 ; printf("%s  ", $_); }'
+		
+		"shuffle" | "f" )
+			if [ $# -gt 1 ]; then
+				if [[ "$2" == "on" || "$2" == "true" ]]; then
+					echo "Turning shuffle on";
+					osascript -e 'tell application "iTunes" to set shuffle of current playlist to 1';
+				elif [[ "$2" == "off" || "$2" == "false" ]]; then
+					echo "Turning shuffle off";
+					osascript -e 'tell application "iTunes" to set shuffle of current playlist to 0';
+				fi
+			else
+				echo "Toggling shuffle ";
+				osascript -e 'tell application "iTunes" to set shuffle of current playlist to not shuffle of current playlist';
+			fi
+		break;;
+		
+		"search" | "@" ) echo "Searching Library.\n";
+		if [ $# -gt 1 ]; then
+			osascript -e 'tell application "iTunes"'\
+			 -e 'delete tracks of playlist "results"'\
+			 -e "set searchResults to search playlist \"Music\" for \"$2\"" \
+			 -e "repeat with aTrack in searchResults" \
+			 -e 'copy aTrack to playlist "results"'\
+			 -e "end repeat"\
+			 -e "play playlist \"results\""\
+			 -e "end tell";
 			
+			results=`osascript -e 'tell application "iTunes"' -e 'set names to the name of every track of current playlist' -e 'end tell' -e 'if (count of names) > 10 then' -e 'set lst to items 1 thru 10 of names' -e 'else' -e 'set lst to names' -e 'end if'`
+			echo $results | perl -pe  's/, /\n/g'
+			
+		fi 
+ 		break ;;
+		
 		[0-5] ) echo "Set rating to $arg stars"
 			current_song
 			RATE=0
@@ -165,29 +216,21 @@ while [ $# -gt 0 ]; do
 		fi
 		break ;;
 	
-		"stop" | "t" ) echo "Stopping iTunes.";
-			osascript -e 'tell application "iTunes" to stop';
-			break ;;
-			
 		"quit" | "q" ) echo "Quitting iTunes.";
 			osascript -e 'tell application "iTunes" to quit';
 			exit 1 ;;
 
-		"u"        ) 
+		"u"          ) 
 			if [ $# -gt 1 ]; then
 				echo "Playing µ$2";
 				osascript -e "tell application \"iTunes\" to play playlist \"µ$2\""
 			fi
 			break ;;
-		"o"        ) 
+		"o"          ) 
 			if [ $# -gt 1 ]; then
 				echo "Playing Ω$2";
 				osascript -e "tell application \"iTunes\" to play playlist \"Ω$2\""
 			fi
-			break ;;
-			
-		"help" | 'h' ) echo "help:";
-			showHelp;
 			break ;;
 			
 		"random" | 'rnd' | 'd' ) echo "Playing a random album";
@@ -236,6 +279,10 @@ while [ $# -gt 0 ]; do
 		PPLESCRIPT
 		current_song
 		break;;
-	
+		
+		"help" | * ) echo "help:";
+			usage;
+			break ;;
+		
 	esac
 done
