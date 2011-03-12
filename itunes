@@ -12,7 +12,7 @@ usage () {
 	echo                       
 	echo " (n) next            : Go to the next track.";
 	echo " (b) prev            : Go to the previous track.";
-	echo " (r) rewind          : Rewinds the current trac.";
+	echo " (r) rewind          : Rewinds the current track.";
 	echo                       
 	echo " (m) mute            : Mute iTunes' volume.";
 	echo " (m) unmute          : Unmute iTunes' volume.";
@@ -21,6 +21,8 @@ usage () {
 	echo " (v) vol #           : Set iTunes' volume to # [0-100]";
 	echo                     
 	echo " (@) search {string} : Search for songs (results playlist must exist)";
+	echo " (c) current         : List the first ten songs of the playlist";
+	echo
 	echo                     
 	echo " (l) playlist        : List all the playlists";
 	echo " (l) playlist {name} : Plays the specified playlist ";
@@ -55,6 +57,12 @@ state(){
 	if [ $state = "playing" ]; then
 		current_song
 	fi
+}
+
+
+list_current_playlist(){
+	results=`osascript -e 'tell application "iTunes"' -e 'set names to the name of every track of current playlist' -e 'end tell' -e 'if (count of names) > 10 then' -e 'set lst to items 1 thru 10 of names' -e 'else' -e 'set lst to names' -e 'end if'`
+	echo $results | perl -pe  's/, /\n/g'
 }
 
 if [ $# = 0 ]; then
@@ -154,6 +162,12 @@ while [ $# -gt 0 ]; do
 			fi
 		break;;
 		
+		"current" | "c") printf "\033[33m"
+			osascript -e 'tell application "iTunes" to set names to the name of the current playlist'
+			printf "\033[0m"
+			list_current_playlist
+		break;;
+		
 		"search" | "@" ) echo "Searching Library.\n";
 		if [ $# -gt 1 ]; then
 			osascript -e 'tell application "iTunes"'\
@@ -165,9 +179,7 @@ while [ $# -gt 0 ]; do
 			 -e "play playlist \"results\""\
 			 -e "end tell";
 			
-			results=`osascript -e 'tell application "iTunes"' -e 'set names to the name of every track of current playlist' -e 'end tell' -e 'if (count of names) > 10 then' -e 'set lst to items 1 thru 10 of names' -e 'else' -e 'set lst to names' -e 'end if'`
-			echo $results | perl -pe  's/, /\n/g'
-			
+			list_current_playlist
 		fi 
  		break ;;
 		
