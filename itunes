@@ -15,7 +15,7 @@ showHelp () {
 	echo " (r) rewind        : Rewinds the current trac.";
 	echo                     
 	echo " (m) mute          : Mute iTunes' volume.";
-	echo " (e) unmute        : Unmute iTunes' volume.";
+	echo " (m) unmute        : Unmute iTunes' volume.";
 	echo " (v) vol up        : Increase iTunes' volume by 10%";
 	echo " (v) vol down      : Increase iTunes' volume by 10%";
 	echo " (v) vol #         : Set iTunes' volume to # [0-100]";
@@ -81,12 +81,8 @@ while [ $# -gt 0 ]; do
 			osascript -e 'tell application "iTunes" to back track';
 			break ;;
 
-		"mute" | "m"   ) echo "Muting iTunes volume level.";
-			osascript -e 'tell application "iTunes" to set mute to true';
-			break ;;
-
-		"unmute" | "e" ) echo "Unmuting iTunes volume level.";
-			osascript -e 'tell application "iTunes" to set mute to false';
+		"mute" | "unmute" | "m"   ) echo "(un)Muting iTunes volume level.";
+			osascript -e 'tell application "iTunes" to set mute to not mute';
 			break ;;
 
 		"vol" | "v"    ) echo "Changing iTunes volume level.";
@@ -109,6 +105,18 @@ while [ $# -gt 0 ]; do
 			if [ $# -gt 1 ]; then
 				echo "Playing $2";
 				osascript -e "tell application \"iTunes\" to play playlist \"$2\""
+			else 
+				osascript <<-APPLESCRIPT
+				tell application "iTunes"
+					set allPlaylists to (get name of every playlist ¬
+						where special kind = none ¬
+						and name does not contain "pc"¬ 
+						and name does not contain "kbs" ¬
+						and name does not contain "Alfred.app Playlist" ¬
+						and name does not contain "Some Random Album" ¬
+						)
+				end tell
+				APPLESCRIPT
 			fi
 			break ;;
 			
@@ -183,49 +191,49 @@ while [ $# -gt 0 ]; do
 			break ;;
 			
 		"random" | 'rnd' | 'd' ) echo "Playing a random album";
-		osascript &> /dev/null <<PPLESCRIPT
-property randomAlbumName : "Some Random Album"
+		osascript &> /dev/null <<-PPLESCRIPT
+			property randomAlbumName : "Some Random Album"
 
-tell application "iTunes"
-	set myMusicLibrary to (some playlist whose special kind is Music)
-	if exists (some user playlist whose name is randomAlbumName) then
-		delete every track of playlist randomAlbumName
-	else
-		make new playlist with properties {name:randomAlbumName, shuffle:false}
-	end if
-	set new_playlist to playlist randomAlbumName
-	
-	tell myMusicLibrary
-		set someTrack to some track
-		set play_album to album of someTrack
-		set disc_number to disc number of someTrack
-		set total_album_tracks to tracks whose album is play_album and disc number is disc_number
-		set spareTracks to {}
-		repeat with n from 1 to length of total_album_tracks
-			set chk to false
-			repeat with a_track in total_album_tracks
-				if track number of a_track is n then
-					set chk to true
-					try
-						duplicate a_track to new_playlist
-					end try
-					exit repeat
+			tell application "iTunes"
+				set myMusicLibrary to (some playlist whose special kind is Music)
+				if exists (some user playlist whose name is randomAlbumName) then
+					delete every track of playlist randomAlbumName
+				else
+					make new playlist with properties {name:randomAlbumName, shuffle:false}
 				end if
-			end repeat
-			if chk is false then set end of spareTracks to a_track
-			-- start playing after addition of first song
-			try
-				if n = 1 then play new_playlist
-			end try
-		end repeat
-		if spareTracks is not {} then
-			repeat with a_track in spareTracks
-				duplicate a_track to new_playlist
-			end repeat
-		end if
-	end tell
-end tell
-PPLESCRIPT
+				set new_playlist to playlist randomAlbumName
+	
+				tell myMusicLibrary
+					set someTrack to some track
+					set play_album to album of someTrack
+					set disc_number to disc number of someTrack
+					set total_album_tracks to tracks whose album is play_album and disc number is disc_number
+					set spareTracks to {}
+					repeat with n from 1 to length of total_album_tracks
+						set chk to false
+						repeat with a_track in total_album_tracks
+							if track number of a_track is n then
+								set chk to true
+								try
+									duplicate a_track to new_playlist
+								end try
+								exit repeat
+							end if
+						end repeat
+						if chk is false then set end of spareTracks to a_track
+						-- start playing after addition of first song
+						try
+							if n = 1 then play new_playlist
+						end try
+					end repeat
+					if spareTracks is not {} then
+						repeat with a_track in spareTracks
+							duplicate a_track to new_playlist
+						end repeat
+					end if
+				end tell
+			end tell
+		PPLESCRIPT
 		current_song
 		break;;
 	
