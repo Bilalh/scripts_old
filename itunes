@@ -1,5 +1,6 @@
 #!/bin/sh
 #Bilal Hussain
+
 showHelp () {
 	echo "-----------------------------";
 	echo "iTunes Terminal";
@@ -8,14 +9,14 @@ showHelp () {
 	echo;
     echo "Options: (short)";
     echo " (s) status        = Shows iTunes' status, and track info";
-    echo " (a) play          = Start playing.";
-    echo " (e) pause         = Pause iTunes.";
+    echo " (y) play          = Start playing.";
+    echo " (a) pause         = Pause iTunes.";
     echo " (p) playpause     = Start playing / pauses.";
     echo " (n) next          = Go to the next track.";
     echo " (b) prev          = Go to the previous track.";
     echo " (r) rewind        = Rewinds the current trac.";
     echo " (m) mute          = Mute iTunes' volume.";
-    echo " (u) unmute        = Unmute iTunes' volume.";
+    echo " (e) unmute        = Unmute iTunes' volume.";
     echo " (l) playlist      = plays the specified playlist ";
     echo " (v) vol up        = Increase iTunes' volume by 10%";
     echo " (v) vol down      = Increase iTunes' volume by 10%";
@@ -58,11 +59,11 @@ while [ $# -gt 0 ]; do
 			osascript -e 'tell application "iTunes" to playpause';
 			break ;;
 			
-		"play" | "a"  ) echo "Playing iTunes.";
+		"play" | "y"  ) echo "Playing iTunes.";
 			osascript -e 'tell application "iTunes" to play';
 			break ;;
 
-		"pause" | "e" ) echo "Pausing iTunes.";
+		"pause" | "a" ) echo "Pausing iTunes.";
 			osascript -e 'tell application "iTunes" to pause';
 			break ;;
 
@@ -82,7 +83,7 @@ while [ $# -gt 0 ]; do
 			osascript -e 'tell application "iTunes" to set mute to true';
 			break ;;
 
-		"unmute" | "u" ) echo "Unmuting iTunes volume level.";
+		"unmute" | "e" ) echo "Unmuting iTunes volume level.";
 			osascript -e 'tell application "iTunes" to set mute to false';
 			break ;;
 
@@ -161,6 +162,19 @@ while [ $# -gt 0 ]; do
 		"quit" | "q" ) echo "Quitting iTunes.";
 			osascript -e 'tell application "iTunes" to quit';
 			exit 1 ;;
+
+		"u"        ) 
+			if [ $# -gt 1 ]; then
+				echo "Playing µ$2";
+				osascript -e "tell application \"iTunes\" to play playlist \"µ$2\""
+			fi
+			break ;;
+		"o"        ) 
+			if [ $# -gt 1 ]; then
+				echo "Playing Ω$2";
+				osascript -e "tell application \"iTunes\" to play playlist \"Ω$2\""
+			fi
+			break ;;
 
 		"help" | * ) echo "help:";
 			showHelp;
