@@ -2,30 +2,32 @@
 #Bilal Hussain
 
 showHelp () {
-	echo "-----------------------------";
-	echo "iTunes Terminal";
-	echo "-----------------------------";
 	echo "Usage: `basename $0` <option>";
-	echo;
-    echo "Options: (short)";
-    echo " (s) status        = Shows iTunes' status, and track info";
-    echo " (y) play          = Start playing.";
-    echo " (a) pause         = Pause iTunes.";
-    echo " (p) playpause     = Start playing / pauses.";
-    echo " (n) next          = Go to the next track.";
-    echo " (b) prev          = Go to the previous track.";
-    echo " (r) rewind        = Rewinds the current trac.";
-    echo " (m) mute          = Mute iTunes' volume.";
-    echo " (e) unmute        = Unmute iTunes' volume.";
-    echo " (l) playlist      = plays the specified playlist ";
-    echo " (v) vol up        = Increase iTunes' volume by 10%";
-    echo " (v) vol down      = Increase iTunes' volume by 10%";
-    echo " (v) vol #         = Set iTunes' volume to # [0-100]";
-    echo "     [0-5] {force} = Set the current song rating" ;
-    echo " (6) 4.5   {force} = Set the current song rating to 4½ stars" ;
-
-    echo " (t) stop          = Stop iTunes.";
-    echo " (q) quit          = Quit iTunes.";
+	echo
+	echo "Options: (short)";
+	echo " (s) status        : Shows iTunes' status, and track info";
+	echo " (y) play          : Start playing.";
+	echo " (a) pause         : Pause iTunes.";
+	echo " (p) playpause     : Start playing / pauses.";
+	echo                     
+	echo " (n) next          : Go to the next track.";
+	echo " (b) prev          : Go to the previous track.";
+	echo " (r) rewind        : Rewinds the current trac.";
+	echo                     
+	echo " (m) mute          : Mute iTunes' volume.";
+	echo " (e) unmute        : Unmute iTunes' volume.";
+	echo " (v) vol up        : Increase iTunes' volume by 10%";
+	echo " (v) vol down      : Increase iTunes' volume by 10%";
+	echo " (v) vol #         : Set iTunes' volume to # [0-100]";
+	echo                     
+	echo " (l) playlist      : plays the specified playlist ";
+	echo " (d) random        : plays a random album";
+	echo                     
+	echo "     [0-5] {force} : Set the current song rating" ;
+	echo " (6) 4.5   {force} : Set the current song rating to 4½ stars" ;
+	echo                     
+	echo " (t) stop          : Stop iTunes.";
+	echo " (q) quit          : Quit iTunes.";
 }
 
 #fixme shows error on end of playlist
@@ -175,9 +177,57 @@ while [ $# -gt 0 ]; do
 				osascript -e "tell application \"iTunes\" to play playlist \"Ω$2\""
 			fi
 			break ;;
-
-		"help" | * ) echo "help:";
+			
+		"help" | 'h' ) echo "help:";
 			showHelp;
 			break ;;
+			
+		"random" | 'rnd' | 'd' ) echo "Playing a random album";
+		osascript &> /dev/null <<PPLESCRIPT
+property randomAlbumName : "Some Random Album"
+
+tell application "iTunes"
+	set myMusicLibrary to (some playlist whose special kind is Music)
+	if exists (some user playlist whose name is randomAlbumName) then
+		delete every track of playlist randomAlbumName
+	else
+		make new playlist with properties {name:randomAlbumName, shuffle:false}
+	end if
+	set new_playlist to playlist randomAlbumName
+	
+	tell myMusicLibrary
+		set someTrack to some track
+		set play_album to album of someTrack
+		set disc_number to disc number of someTrack
+		set total_album_tracks to tracks whose album is play_album and disc number is disc_number
+		set spareTracks to {}
+		repeat with n from 1 to length of total_album_tracks
+			set chk to false
+			repeat with a_track in total_album_tracks
+				if track number of a_track is n then
+					set chk to true
+					try
+						duplicate a_track to new_playlist
+					end try
+					exit repeat
+				end if
+			end repeat
+			if chk is false then set end of spareTracks to a_track
+			-- start playing after addition of first song
+			try
+				if n = 1 then play new_playlist
+			end try
+		end repeat
+		if spareTracks is not {} then
+			repeat with a_track in spareTracks
+				duplicate a_track to new_playlist
+			end repeat
+		end if
+	end tell
+end tell
+PPLESCRIPT
+		current_song
+		break;;
+	
 	esac
 done
