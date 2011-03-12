@@ -1,0 +1,127 @@
+#!/bin/bash
+
+# please set the 'please define' to your repository's latexdiff-command,
+# as explained in the README file that should've come with this script.
+revlatexdiffcmd='git difftool -t latex --no-prompt'
+
+#    This script is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Lesser General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+nodiffcmd='please define'
+if [ "$revlatexdiffcmd" == "$nodiffcmd" ];
+ then
+  echo 'You need to setup the script with a diff command.'
+  echo 'Please see the README file that came with this script.' 
+  exit 2
+fi
+
+if [ "$1" == -h ]  || [ "$#" -eq 0 ];
+then
+ echo "Usage:"
+ echo "latexgitdiff.sh [<revision to compare against>] <main tex file> [<additional tex file 1> <additional tex file 2> ...]"
+ echo "   - If revision is not defined, uncommitted changes will be compared"
+ exit 0
+fi
+
+if [ "$#" -lt 2 ];
+then
+ if [ "$#" -eq 1 ]
+ then
+  if [[ "$1" != *.tex ]]
+   then
+    echo "You need to input at least one file2"
+    exit 1
+   fi
+ else
+  echo "You need to input at least one file"
+  exit 1
+ fi
+fi
+
+myrev=$1
+if [[ $1 != *.tex ]]
+then 
+ myrev=$1
+ txstart=2
+else # no checkout necessary
+ myrev=""
+ txstart=1
+fi
+
+for i in `jot - $txstart $#`
+do
+ if [[ "$1" != *.tex ]]
+ then
+  f=${!i}
+  diff=$(echo "$f" | sed -e "s/.tex\$/-diff.tex/");
+  $revlatexdiffcmd $1 $f > $diff
+  if [[ ! -s $diff ]] 
+  then
+   echo "INFO: no changes in $f"
+   latexdiff $f $f > $diff
+  fi
+ else
+  f=${!i}
+  diff=$(echo "$f" | sed -e "s/.tex\$/-diff.tex/");
+  $revlatexdiffcmd $f > $diff
+  if [[ ! -s $diff ]] 
+  then
+   echo "INFO: no changes in $f"
+   latexdiff $f $f > $diff
+  fi
+ fi
+done
+
+maindiff=$(echo "${!txstart}" | sed -e "s/.tex\$/-diff.tex/");
+
+# in the first file we assume we might have include statements:
+# todo: this only takes two files, should iterate...
+if [ $(( $# - $txstart )) -gt 0 ]
+then
+ for i in `jot - $(( $txstart + 1 )) $#`
+ do
+  diff=$(echo "${!i}" | sed -e "s/.tex\$/-diff.tex/");
+  sed -e "s#${!i}#$diff#g" $maindiff > $maindiff-tmp
+  # we can also have include statements without the .tex ending:
+  oldstring1=$(echo "\include{${!i}}" | sed -e "s/.tex//");
+  newstring1=$(echo "\include{${!i}}" | sed -e "s/.tex/-diff/");
+  oldstring2=$(echo "\input{${!i}}" | sed -e "s/.tex//");
+  newstring2=$(echo "\input{${!i}}" | sed -e "s/.tex/-diff/");
+  sed -e "s#$oldstring1#$newstring1#g" $maindiff-tmp | sed -e "s#$oldstring2#$newstring2#g" > $maindiff
+ done
+fi
+
+# now we generate the latex file:
+# and the bib-file
+pdflatex -interaction nonstopmode $maindiff > /dev/null
+if [ -e $(sed -e "s/.tex\$/.aux/ $maindiff") ]
+then
+ bibtex `(basename $maindiff .tex)`
+fi
+pdflatex -interaction nonstopmode $maindiff > /dev/null
+
+# and then we open the new pdf:
+open $(echo "$maindiff" | sed -e "s/tex\$/pdf/");
+
+# finally we delete files that we have generated:
+for i in `jot - $txstart $#`
+ do
+  f=${!i}
+  rm $(echo "$f" | sed -e "s/.tex\$/-diff.tex/")
+  rm $(echo "$f" | sed -e "s/.tex\$/-diff.aux/")
+  rm $(echo "$f" | sed -e "s/.tex\$/-diff.aux/")
+  rm $(echo "$f" | sed -e "s/.tex\$/-diff.log/")
+  rm $(echo "$f" | sed -e "s/.tex\$/-diff.blg/")
+  rm $(echo "$f" | sed -e "s/.tex\$/-diff.bbl/")
+ done
