@@ -13,6 +13,7 @@ showHelp () {
     echo " (p) playpause     = Start playing / pauses.";
     echo " (n) next          = Go to the next track.";
     echo " (b) prev          = Go to the previous track.";
+    echo " (r) rewind        = Rewinds the current trac.";
     echo " (m) mute          = Mute iTunes' volume.";
     echo " (u) unmute        = Unmute iTunes' volume.";
     echo " (l) playlist      = plays the specified playlist ";
@@ -72,6 +73,9 @@ while [ $# -gt 0 ]; do
 
 		"prev" | "b" | "back" ) echo "Going to previous track.";
 			osascript -e 'tell application "iTunes" to previous track';
+			break ;;
+		"rewind" | "r" ) echo "Rewinding track.";
+			osascript -e 'tell application "iTunes" to back track';
 			break ;;
 
 		"mute" | "m"   ) echo "Muting iTunes volume level.";
