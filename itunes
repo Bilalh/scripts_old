@@ -44,9 +44,10 @@ current_song(){
 	rating="`osascript -e 'tell application \"iTunes\" to rating of current track as string'`"
 	stars=$((rating/20));     # number of stars
 	half=$((rating%20 ==10)); # for half stars
+	#  (non breaking space to keep data right)
 	printf " Track : %s %s \n Album : %s\n Artist: %s\n" \
 		"`osascript -e 'tell application \"iTunes\" to name of current track as string'`"\
-		`ruby -e "print '★'*${stars}, '½'*${half}"`\
+		`ruby -e "print ' ', '★'*${stars}, '½'*${half}"`\
 		"`osascript -e 'tell application \"iTunes\" to album of current track as string'`"\
 		"`osascript -e 'tell application \"iTunes\" to artist of current track as string'`"
 }
