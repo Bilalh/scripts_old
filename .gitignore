@@ -5,3 +5,6 @@ histw
 histwc
 setLabel
 setLabelByNumber
+get_titles.sh
+get_number.sh
+itunes.rbo

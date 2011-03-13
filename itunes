@@ -14,8 +14,9 @@ usage () {
 	echo " (b) prev            : Go to the previous track.";
 	echo " (r) rewind          : Rewinds the current track.";
 	echo                       
-	echo " (m) mute            : Mute iTunes' volume.";
-	echo " (m) unmute          : Unmute iTunes' volume.";
+	echo " (m)                 : Toggles Mute iTunes' volume.";
+	echo "     mute            : Mute iTunes' volume.";
+	echo "     unmute          : Unmute iTunes' volume.";
 	echo " (v) vol up          : Increase iTunes' volume by 10%";
 	echo " (v) vol down        : Increase iTunes' volume by 10%";
 	echo " (v) vol #           : Set iTunes' volume to # [0-100]";
@@ -104,9 +105,17 @@ while [ $# -gt 0 ]; do
 			osascript -e 'tell application "iTunes" to back track';
 			break ;;
 
-		"mute" | "unmute" | "m"   ) echo "(un)Muting iTunes volume level.";
-			osascript -e 'tell application "iTunes" to set mute to not mute';
-			break ;;
+		"mute"         ) echo "Muting iTunes' volume level.";
+		osascript -e 'tell application "iTunes" to set mute to true';
+		break ;;
+
+		"unmute"         ) echo "Unmuting iTunes' volume level.";
+		osascript -e 'tell application "iTunes" to set mute to false';
+		break ;;
+
+		"m"           ) echo "(un)Muting iTunes volume level.";
+		osascript -e 'tell application "iTunes" to set mute to not mute';
+		break ;;
 
 		"vol" | "v"    ) echo "Changing iTunes volume level.";
 			if [ $# -gt 1 ]; then
