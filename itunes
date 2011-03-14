@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #Bilal Hussain
 
 usage () {
@@ -21,17 +21,24 @@ usage () {
 	echo " (v) vol down        : Increase iTunes' volume by 10%";
 	echo " (v) vol #           : Set iTunes' volume to # [0-100]";
 	echo                     
-	echo " (@) search {string} : Search for songs (results playlist must exist)";
-	echo " (c) current         : List the first ten songs of the playlist";
+	echo " (@) search        {string} : Search for songs in each field (results playlist must exist)";
+	echo " (@) search [type] {string} : Search for songs by type";
+	echo "                            : Types are album, artist, composer ";
+	echo "                            : comment, genre, grouping and year ";
 	echo
-	echo                     
 	echo " (l) playlist        : List all the playlists";
 	echo " (l) playlist {name} : Plays the specified playlist ";
+	echo " (c) current         : List the first ten songs of the playlist";
+	echo
 	echo " (d) random          : Plays a random album";
 	echo " (f) shuffle         : Toggles shuffle";
 	echo " (f) shuffle on      : Turns shuffle on";
 	echo " (f) shuffle off     : Turns shuffle off";
-	
+	echo
+	echo " (e) repeat all      : Set repeat to all";
+	echo " (e) repeat one      : Set repeat to on";
+	echo " (e) repeat off      : Set repeat to off";
+	echo
 	echo
 	echo "     [0-5] {force}  : Set the current song rating" ;
 	echo " (6) 4.5   {force}  : Set the current song rating to 4½ stars" ;
@@ -172,6 +179,23 @@ while [ $# -gt 0 ]; do
 			fi
 		break;;
 		
+		"repeat" | "e" )
+			if [ $# -gt 1 ]; then
+				if [ "$2" == "all" ]; then
+					echo "Setting repeat to all";
+					osascript -e 'tell application "iTunes" to set song repeat of current playlist to all';
+				elif [ "$2" == "one" ]; then                                   
+					echo "Setting repeat to one";                              
+					osascript -e 'tell application "iTunes" to set song repeat of current playlist to one';
+				elif [ "$2" == "off" ]; then                                   
+					echo "Setting repeat to off";                              
+					osascript -e 'tell application "iTunes" to set song repeat of current playlist to off';
+				fi
+			else
+				echo "Needs all|one|off as a argument";
+			fi
+		break;;
+		
 		"current" | "c") printf "\033[33m"
 			osascript -e 'tell application "iTunes" to set names to the name of the current playlist'
 			printf "\033[0m"
@@ -180,14 +204,43 @@ while [ $# -gt 0 ]; do
 		
 		"search" | "@" ) echo "Searching Library.\n";
 		if [ $# -gt 1 ]; then
-			osascript -e 'tell application "iTunes"'\
-			 -e 'delete tracks of playlist "results"'\
-			 -e "set searchResults to search playlist \"Music\" for \"$2\"" \
-			 -e "repeat with aTrack in searchResults" \
-			 -e 'copy aTrack to playlist "results"'\
-			 -e "end repeat"\
-			 -e "play playlist \"results\""\
-			 -e "end tell";
+			
+			if  [[ $# -gt 2 && ( "$2" == "name" || "$2" == "album" || "$2" == "artist" \
+						|| "$2" == "grouping" || "$2" == "composer" || "$2" == "year" \
+						|| "$2" == "comment"  || "$2" == "genre"  \
+				)]]; then
+				
+				type="$2";
+				shift; # get rids of search/@
+				shift; # get rid of type
+				
+				osascript <<-APPLESCRIPT
+				tell application "iTunes"
+					delete tracks of playlist "results"
+					set searchResults to file tracks whose ${type} contains "${*}"
+					repeat with aTrack in searchResults
+						copy aTrack to playlist "results"
+					end repeat
+					play playlist "results"
+				end tell
+				APPLESCRIPT
+				
+			else 
+				
+				shift;  # get rids of search/@
+				
+				osascript <<-APPLESCRIPT
+				tell application "iTunes"
+					delete tracks of playlist "results"
+					set searchResults to search playlist "Music" for "${*}"
+					repeat with aTrack in searchResults
+						copy aTrack to playlist "results"
+					end repeat
+					play playlist "results"
+				end tell
+				APPLESCRIPT
+				
+			fi
 			
 			list_current_playlist
 		fi 
