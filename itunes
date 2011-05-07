@@ -53,11 +53,14 @@ current_song(){
 	stars=$((rating/20));     # number of stars
 	half=$((rating%20 ==10)); # for half stars
 	#  (non breaking space to keep data right)
-	printf " Track : %s %s \n Album : %s\n Artist: %s\n" \
+	printf " Track : %s %s \n Album : %s\n Artist: %s\n Time  : %s\n" \
 		"`osascript -e 'tell application \"iTunes\" to name of current track as string'`"\
 		`ruby -e "print ' ', '★'*${stars}, '½'*${half}"`\
 		"`osascript -e 'tell application \"iTunes\" to album of current track as string'`"\
-		"`osascript -e 'tell application \"iTunes\" to artist of current track as string'`"
+		"`osascript -e 'tell application \"iTunes\" to artist of current track as string'`"\
+		"`osascript -e 'tell application \"iTunes\" to set tt to {player position} & {duration} of current track' -e '' -e '' -e 'set cMin to (1st item of tt) div 60' -e 'set cSec to (1st item of tt) mod 60' -e 'set tMin to (2nd item of tt) div 60' -e 'set tSec to (2nd item of tt) mod 60' -e '' -e '' -e 'set cur to cMin & \":\" & zero_pad(cSec, 2) & \"/\" & tMin & \":\" & zero_pad(tSec, 2) as string' -e '' -e 'on zero_pad(value, string_length)' -e 'set tmp_string to \"000000000\" & (value as string)' -e 'set padded_value to characters ((length of tmp_string) - string_length + 1) thru -1 of tmp_string as string' -e 'return padded_value' -e 'end zero_pad'`"
+# pos and total length in seconds
+#osascript -e 'tell app "itunes" to {player position} & {duration} of current track'
 }
 
 state(){
@@ -202,7 +205,7 @@ while [ $# -gt 0 ]; do
 			list_current_playlist
 		break;;
 		
-		"search" | "@" ) echo "Searching Library.\n";
+		"search" | "@" ) echo "Searching Library.";
 		if [ $# -gt 1 ]; then
 			
 			if  [[ $# -gt 2 && ( "$2" == "name" || "$2" == "album" || "$2" == "artist" \
