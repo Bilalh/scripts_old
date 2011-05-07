@@ -58,9 +58,13 @@ current_song(){
 		`ruby -e "print ' ', '★'*${stars}, '½'*${half}"`\
 		"`osascript -e 'tell application \"iTunes\" to album of current track as string'`"\
 		"`osascript -e 'tell application \"iTunes\" to artist of current track as string'`"\
-		"`osascript -e 'tell application \"iTunes\" to set tt to {player position} & {duration} of current track' -e '' -e '' -e 'set cMin to (1st item of tt) div 60' -e 'set cSec to (1st item of tt) mod 60' -e 'set tMin to (2nd item of tt) div 60' -e 'set tSec to (2nd item of tt) mod 60' -e '' -e '' -e 'set cur to cMin & \":\" & zero_pad(cSec, 2) & \"/\" & tMin & \":\" & zero_pad(tSec, 2) as string' -e '' -e 'on zero_pad(value, string_length)' -e 'set tmp_string to \"000000000\" & (value as string)' -e 'set padded_value to characters ((length of tmp_string) - string_length + 1) thru -1 of tmp_string as string' -e 'return padded_value' -e 'end zero_pad'`"
-# pos and total length in seconds
-#osascript -e 'tell app "itunes" to {player position} & {duration} of current track'
+		"`osascript -e 'tell application \"iTunes\" to set tt to {player position} & {duration} of current track'\
+			-e 'set cMin to (1st item of tt) div 60' -e 'set cSec to (1st item of tt) mod 60' -e 'set tMin to (2nd item of tt) div 60'\
+			-e 'set tSec to (2nd item of tt) mod 60' \
+			-e 'set cur to cMin & \":\" & zero_pad(cSec, 2) & \"/\" & tMin & \":\" & zero_pad(tSec, 2) as string'\
+			-e 'on zero_pad(value, string_length)' -e 'set tmp_string to \"000000000\" & (value as string)' \
+			-e 'set padded_value to characters ((length of tmp_string) - string_length + 1) thru -1 of tmp_string as string' \
+			-e 'return padded_value' -e 'end zero_pad'`"
 }
 
 state(){
