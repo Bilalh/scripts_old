@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby19
 # encoding: UTF-8
 
+# Aigns equals signs in many languages requires ruby 1.9  
+
 def alternation(*s); s.map(&Regexp.method(:escape)).join("|") end
 
 # All input is read here.

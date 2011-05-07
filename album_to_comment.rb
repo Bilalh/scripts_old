@@ -1,4 +1,8 @@
 #!/usr/bin/env ruby
+# Bilal Hussain
+
+# Set the comment fields to the album 
+
 require "rubygems"
 require "mp3info"
 

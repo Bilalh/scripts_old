@@ -1,4 +1,9 @@
 #!/bin/bash
+# Bilal Hussain
+
+# Rencodes the mkv to mp4 and hard subs the subtitles,
+# setting are for a N900
+
 TODO="/Users/bilalh/Movies/.Movie/todo/"
 OUTPUT="/Users/bilalh/Movies/.Movie/enc"
 form="mp4"

@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python
 
 """
 rename - Renames file using python regular expression.

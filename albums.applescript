@@ -1,4 +1,8 @@
 #!/usr/bin/env osascript
+# Bilal Hussain
+
+# Returns a sorted list of every album (without dups) in a the specifed playlist.
+
 on run argv
 	tell application "iTunes"
 		
@@ -32,17 +36,14 @@ on run argv
 	# sort the album list
 	set sortedAlbums to mergeSort(listOfAlbumNames)
 end run
-# display in a dialog
 
-# see the url above for this function
+# Sorts the list
 on mergeSort(theList)
-	--the public routine, to be called from your script
+
 	script bs
 		property alist : theList
 		
 		on merge(leftSide, rightSide)
-			--private routine called by mergeSort.
-			--do not call from your script!
 			set newList to {}
 			set theLeft to leftSide
 			set theRight to rightSide

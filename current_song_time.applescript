@@ -1,3 +1,8 @@
+#!/usr/bin/env osascript
+# Bilal Hussain
+
+# Returns the current time and the total play time in the form 3:33/6:23
+
 tell application "iTunes" to set tt to {player position} & {duration} of current track
 
 

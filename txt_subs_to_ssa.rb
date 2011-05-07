@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby -wKU
+# Bilal Hussain
+
 # converts from the format 
 #  00:00:50:...gdy ten mur zacznie pIkaE.
 #  00:00:06:...i wycipigam d>=oO.

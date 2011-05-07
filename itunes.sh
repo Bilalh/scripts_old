@@ -1,5 +1,6 @@
 #!/bin/bash
-#Bilal Hussain
+# Bilal Hussain
+# Controls Itunes from the command line
 
 usage () {
 	echo "Usage: `basename $0` <option>";

@@ -1,10 +1,15 @@
 #!/usr/bin/env ruby
+# Bilal Hussain
+
+# Use calibre exported data to fill in the series info in FBReader sqlite database
+# Made for FBReader on N900
+
 require "rubygems"
 require 'xml'
 require 'sqlite3'
 
-Dir.chdir "/Users/bilalh/Books/"
-BooksDB = "/Users/bilalh/Desktop/books.db"
+Dir.chdir  File.expand_path("~/Books/")
+BooksDB = File.expand_path("~/Desktop/books.db")
 OpfGlob = "*.opf"
 
 # Returns the series, series_num and title of the opf
@@ -25,7 +30,6 @@ def opf_parse(opf_file)
 end
 
 def add_series(db, series, series_num, title)
-	#!/usr/bin/env ruby
 	query = <<-SQL
 	Select b.title, s.name, bs.series_id, b.book_id
 	From Books b

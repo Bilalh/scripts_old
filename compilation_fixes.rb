@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# Bilal Hussain
+
 require "rubygems"
 require "mp3info"
 
