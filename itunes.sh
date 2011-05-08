@@ -50,7 +50,7 @@ usage () {
 	echo " (q) quit           : Quit iTunes.";
 }
 
-# Returns the song data
+# Returns the song's data
 # Track : Fur Elise ★★★★★
 # Album : Für Elise
 # Artist: Beethoven
@@ -103,6 +103,7 @@ current_song(){
 	end make_stars
 	PPLESCRIPT
 }
+
 
 state(){
 	state=`osascript -e 'tell application "iTunes" to player state as string'`;
