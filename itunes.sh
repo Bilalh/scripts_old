@@ -25,8 +25,9 @@ usage () {
 	echo " (@) search        {string} : Search for songs in each field (results playlist must exist)";
 	echo " (@) search [type] {string} : Search for songs by type";
 	echo "                            : Types are album, artist, composer ";
-	echo "                            : comment, genre, grouping and year ";
-	echo
+	echo "                            : comment, genre, grouping, name and year ";
+	echo " ($)               {string} : Serching for songs using name, album and comment as fields";
+	echo 
 	echo " (l) playlist        : List all the playlists";
 	echo " (l) playlist {name} : Plays the specified playlist ";
 	echo " (c) current         : List the first ten songs of the playlist";
@@ -209,49 +210,65 @@ while [ $# -gt 0 ]; do
 			printf "\033[0m"
 			list_current_playlist
 		break;;
-		
-		"search" | "@" ) echo "Searching Library.";
-		if [ $# -gt 1 ]; then
-			
-			if  [[ $# -gt 2 && ( "$2" == "name" || "$2" == "album" || "$2" == "artist" \
-						|| "$2" == "grouping" || "$2" == "composer" || "$2" == "year" \
-						|| "$2" == "comment"  || "$2" == "genre"  \
-				)]]; then
-				
-				type="$2";
-				shift; # get rids of search/@
-				shift; # get rid of type
-				
-				osascript <<-APPLESCRIPT
-				tell application "iTunes"
-					delete tracks of playlist "results"
-					set searchResults to file tracks whose ${type} contains "${*}"
-					repeat with aTrack in searchResults
-						copy aTrack to playlist "results"
-					end repeat
-					play playlist "results"
-				end tell
-				APPLESCRIPT
-				
-			else 
-				
-				shift;  # get rids of search/@
-				
-				osascript <<-APPLESCRIPT
-				tell application "iTunes"
-					delete tracks of playlist "results"
-					set searchResults to search playlist "Music" for "${*}"
-					repeat with aTrack in searchResults
-						copy aTrack to playlist "results"
-					end repeat
-					play playlist "results"
-				end tell
-				APPLESCRIPT
-				
-			fi
-			
+	
+		"$"            ) echo "Serching Library using name, album and comment as fields"; 
+			shift; # get rids of $
+			osascript <<-APPLESCRIPT
+			tell application "iTunes"
+				delete tracks of playlist "results"
+				set searchResults to file tracks whose name contains "${*}" or album contain "${*}" or comment contains "${*}" 
+				repeat with aTrack in searchResults
+					copy aTrack to playlist "results"
+				end repeat
+				play playlist "results"
+			end tell
+			APPLESCRIPT
+
 			list_current_playlist
-		fi 
+		break;;		
+
+		"search" | "@" ) echo "Searching Library.";
+			if [ $# -gt 1 ]; then
+				
+				if  [[ $# -gt 2 && ( "$2" == "name" || "$2" == "album" || "$2" == "artist" \
+							|| "$2" == "grouping" || "$2" == "composer" || "$2" == "year" \
+							|| "$2" == "comment"  || "$2" == "genre"  \
+					)]]; then
+					
+					type="$2";
+					shift; # get rids of search/@
+					shift; # get rid of type
+					
+					osascript <<-APPLESCRIPT
+					tell application "iTunes"
+						delete tracks of playlist "results"
+						set searchResults to file tracks whose ${type} contains "${*}"
+						repeat with aTrack in searchResults
+							copy aTrack to playlist "results"
+						end repeat
+						play playlist "results"
+					end tell
+					APPLESCRIPT
+					
+				else 
+					
+					shift;  # get rids of search/@
+					
+					osascript <<-APPLESCRIPT
+					tell application "iTunes"
+						delete tracks of playlist "results"
+						set searchResults to search playlist "Music" for "${*}"
+						repeat with aTrack in searchResults
+							copy aTrack to playlist "results"
+						end repeat
+						play playlist "results"
+					end tell
+					APPLESCRIPT
+					
+				fi
+				
+				list_current_playlist
+			fi 
  		break ;;
 		
 		[0-5] ) echo "Set rating to $arg stars"
