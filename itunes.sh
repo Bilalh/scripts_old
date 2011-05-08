@@ -79,8 +79,28 @@ state(){
 
 
 list_current_playlist(){
-	results=`osascript -e 'tell application "iTunes"' -e 'set names to the name of every track of current playlist' -e 'end tell' -e 'if (count of names) > 10 then' -e 'set lst to items 1 thru 10 of names' -e 'else' -e 'set lst to names' -e 'end if'`
-	echo $results | perl -pe  's/, /\n/g'
+	osascript <<-ROF
+	tell application "iTunes"
+		set names to the name of every track of current playlist
+		set AppleScript's text item delimiters to "\n"
+		if (count of names) > 10 then
+			set lst to items 1 thru 10 of names as text
+		else
+			set lst to names as text
+		end if
+	end tell
+	ROF
+	
+}
+
+list_current_playlist_all(){
+	osascript <<-APPLESCRIPT
+	tell application "iTunes"
+		set names to the name of every track of current playlist
+		set AppleScript's text item delimiters to "\n"
+		set lst to name of current playlist & "\n\n" & names as text
+	end tell
+	APPLESCRIPT
 }
 
 if [ $# = 0 ]; then
@@ -163,6 +183,7 @@ while [ $# -gt 0 ]; do
 						and name does not contain "kbs" ¬
 						and name does not contain "Alfred.app Playlist" ¬
 						and name does not contain "Some Random Album" ¬
+						and name does not contain "select" ¬
 						)
 				end tell
 				APPLESCRIPT
@@ -205,10 +226,8 @@ while [ $# -gt 0 ]; do
 			fi
 		break;;
 		
-		"current" | "c") printf "\033[33m"
-			osascript -e 'tell application "iTunes" to set names to the name of the current playlist'
-			printf "\033[0m"
-			list_current_playlist
+		"current" | "c") 
+			list_current_playlist_all | less
 		break;;
 	
 		"$"            ) echo "Serching Library using name, album and comment as fields"; 
