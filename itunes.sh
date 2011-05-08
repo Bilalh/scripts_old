@@ -49,7 +49,6 @@ usage () {
 	echo " (q) quit           : Quit iTunes.";
 }
 
-#fixme shows error on end of playlist
 current_song(){
 	rating="`osascript -e 'tell application \"iTunes\" to rating of current track as string'`"
 	stars=$((rating/20));     # number of stars
