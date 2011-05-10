@@ -430,9 +430,11 @@ while [ $# -gt 0 ]; do
 		current_song
 		break;;
 		
-		"help" | * ) echo "help:";
+		h* | -h | --help ) echo "help:";
 			usage;
-			break ;;
+		break ;;
 		
+		*      ) echo "Invaild";
+		break;;
 	esac
 done
