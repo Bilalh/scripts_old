@@ -225,11 +225,6 @@ while [ $# -gt 0 ]; do
 				APPLESCRIPT
 			fi
 			break ;;
-			# spilt onto newline
-			# perl -pe  's/,/\n/g'
-			# puts 3 items on each line
-			# perl -e ' while (<>) { chomp if $. % 4 ; printf("%s  ", $_); }'
-		
 		"shuffle" | "f" )
 			if [ $# -gt 1 ]; then
 				if [[ "$2" == "on" || "$2" == "true" ]]; then
