@@ -149,8 +149,10 @@ while [ $# -gt 0 ]; do
 		"status" | "s" ) state;
 			break ;;
 		
-		"playpause" | "p" ) echo "Changing PlayState";
-			osascript -e 'tell application "iTunes" to playpause';
+		"playpause" | "p" ) echo -n "Changing PlayState to ";
+			state=`osascript -e 'tell application "iTunes"' -e 'playpause'  -e 'set state to player state as string' -e 'end tell'`; 
+			echo $state
+			[ "${state}x" == "playingx" ] && current_song
 			break ;;
 			
 		"play" | "y"  ) echo "Playing iTunes.";
