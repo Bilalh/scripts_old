@@ -15,7 +15,7 @@ require 'fileutils'
 # Requirements 
 # Ruby 1.9 with nokogiri gem
 
-# transform the a wiki page into epub friendly html 
+# Transform the a wiki page into epub friendly html 
 # and gets larger versions of the images
 class WikiePub
 	
@@ -87,7 +87,7 @@ class WikiePub
 		# Finds by the number by counting the list elements  
 		
 		
-		# # places the footnote inline
+		# Places the footnote inline
 		doc.css('ol.references').xpath('li').each do |li|
 			
 			current_foonote = nil
@@ -96,7 +96,7 @@ class WikiePub
 			current_ref     =  a_ele.first['href']
 			#puts "current_note: #{current_note} current_ref: #{current_ref}"
 			
-			# gets a deep copy of the footnote
+			# Gets a deep copy of the footnote
 			doc.css('#' + current_note).each do |ele|
 				ele2                = ele.dup(1) # deep copy
 				#ele2.name           = 'span'
@@ -105,7 +105,7 @@ class WikiePub
 				current_foonote = ele2
 			end
 			
-			# adds the node inline
+			# Adds the node inline
 			doc.css(current_ref).each do |ele|
 				ele.parent.add_child(current_foonote)
 			end
@@ -177,7 +177,7 @@ class WikiePub
 		head_ele.children.last.add_next_sibling ele
 	end
 
-	# write the transform xml to file
+	# Write the transform xml to file
 	def write_html_to_file(filename=@title)
 		create_css()
 		filename << '.html' unless filename[/\.(x)?html$/]
@@ -185,7 +185,7 @@ class WikiePub
 		File.open(@dir + filename, 'w'){|f| f.write(@doc.to_html)}
 	end
 
-	# downloads the specifed file to the specifed place
+	# Downloads the specifed file to the specifed place
 	def download(full_url, to_here)
 	      writeOut = open(@dir + to_here, "wb")
 	      writeOut.write(open(full_url).read)
@@ -306,12 +306,3 @@ elsif ARGV.length == 1 then
 	end
 	
 end
-
-# For Testing
-# w = WikiePub.new("~/Desktop/Maria/")
-# w.tranform_to_epub_friendly(
-# 	'http://www.baka-tsuki.org', 
-# 	"/project/index.php?title=Maria-sama_ga_Miteru:Volume29"
-# )
-# w.write_html_to_file 'new.html'
-
