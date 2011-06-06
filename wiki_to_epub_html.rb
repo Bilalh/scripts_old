@@ -30,7 +30,8 @@ class WikiePub
 		get_images(@doc)
 		puts 
 	end
-	
+
+	# Getter larger images and place them in @dir/images/
 	def get_images(doc)
 		puts "Getting larger images"
 		FileUtils.mkdir_p @dir + '/images/'
@@ -69,7 +70,6 @@ class WikiePub
 		end
 	end
 
-
 	# Transforms the html to make it convert easily to epub
 	def tranform_html(doc)
 		# Finds by the number by counting the list elements  
@@ -87,7 +87,7 @@ class WikiePub
 			# gets a deep copy of the footnote
 			doc.css('#' + current_note).each do |ele|
 				ele2                = ele.dup(1) # deep copy
-				ele2.name           = 'span'
+				#ele2.name           = 'span'
 				ele2['class']       = 'footnote'
 				ele2.remove_attribute 'id'
 				current_foonote = ele2
@@ -95,7 +95,7 @@ class WikiePub
 			
 			# adds the node inline
 			doc.css(current_ref).each do |ele|
-				ele.add_next_sibling(current_foonote)
+				ele.parent.add_child(current_foonote)
 			end
 			
 		end
@@ -251,6 +251,7 @@ elsif ARGV.length == 1 then
 	
 end
 
+# For Testing
 # w = WikiePub.new("~/Desktop/Maria/")
 # w.tranform_to_epub_friendly(
 # 	'http://www.baka-tsuki.org', 
