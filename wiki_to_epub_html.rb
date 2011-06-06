@@ -12,6 +12,9 @@ require 'fileutils'
 #	base_url
 #	{url}+"
 
+# Requirements 
+# Ruby 1.9 with nokogiri gem
+
 # transform the a wiki page into epub friendly html 
 # and gets larger versions of the images
 class WikiePub
@@ -22,11 +25,11 @@ class WikiePub
 		puts "Saving files to: #{base_dir}\n"
 	end
 
-	def tranform_to_epub_friendly(base,page)
+	def tranform_to_epub_friendly(base,page,meta_elements={})
 		@base  = base
 		@doc   = Nokogiri::HTML(open(base + page))
 		puts "Downloading #{base + page}"
-		tranform_html(@doc)
+		tranform_html(@doc,meta_elements)
 		get_images(@doc)
 		puts 
 	end
@@ -49,14 +52,22 @@ class WikiePub
 			a_ele['href']  = filename
 			puts "Filename: " + filename
 			
- 			width             = Integer(img_ele['width'])
-			width             = width * 2
-			img_ele['width']  = width.to_s
+			# Don't resize the gallary box at the top if it exists
+			if img_ele.parent.parent.parent['class'] != 'thumb' then
+	 			width             = Integer(img_ele['width'])
+				width             = width * 2
+				img_ele['width']  = width.to_s
 			
-			height            = Integer(img_ele['height'])
-			height            = height * 2
-			img_ele['height'] = height.to_s
+				height            = Integer(img_ele['height'])
+				height            = height * 2
+				img_ele['height'] = height.to_s
+			end
 			
+			
+			if File.exists?(@dir + filename) then
+				puts "Image #{filename} exists, not downloading"
+				next
+			end
 			
 			# opens the url of the page containing the full size image 
 			img_page = Nokogiri::HTML(open(a_href))
@@ -67,11 +78,12 @@ class WikiePub
 				puts "Image url: " + img_url
 				download(img_url, filename)
 			end
+			
 		end
 	end
 
 	# Transforms the html to make it convert easily to epub
-	def tranform_html(doc)
+	def tranform_html(doc, meta_elements={})
 		# Finds by the number by counting the list elements  
 		
 		
@@ -117,32 +129,59 @@ class WikiePub
 		end
 
 		# Adds a link to our stylesheet 
-		style = Nokogiri::XML::Node.new "link", doc
-		style['rel']  = 'stylesheet'
-		style['href'] = 'styles.css'
-
 		head = doc.xpath('//head')
-		head.children.last.add_next_sibling style
-
+		
+		
 		# Fixes the title and the headings
 		title      = doc.xpath('//title');
 		text_node  = title.children.first
 
 		text =  text_node.content
-		text.gsub! /\s*-\s*Baka-Tsuki/, ""
-		text.gsub! /[- :_]*Volume\s*(\d+)/, ' - Volume \1'
+		text.gsub! /\s*-\s*Baka-Tsuki/i, ""
+		text.gsub! /\s?Full Text/i, ""
+		text.gsub! /[- :_]*Volume\s*(\d+)/i, ' - Volume \1'
 		text_node.content = text
-
+		
+		
 		heading = doc.css('h1#firstHeading')
 		heading.children.last.content = text
-		
 		@title =  text.gsub ' ', '_'
+		
+		unless meta_elements.has_key? 'series'
+			add_child(head, 'meta',
+				name: 'series', 
+				content:  text.gsub(/\s+-?\s*Volume\s*\d+/i, "")  
+			)
+		end
+		
+		meta_elements.each_pair do |name, val| 
+			add_child(head, 'meta',
+				name: name.to_s,
+				content: val
+			)
+		end
+		
+		# Adds a reference to the style sheet
+		add_child(head, 'link', 
+			rel: 'stylesheet', 
+			href: 'styles.css' 
+		)
+		
+	end
+
+	def add_child(head_ele, name, opts={} )
+		ele = Nokogiri::XML::Node.new name, @doc
+		opts.each_pair do |name, val| 
+			ele[name.to_s] = val
+		end
+		head_ele.children.last.add_next_sibling ele
 	end
 
 	# write the transform xml to file
 	def write_html_to_file(filename=@title)
 		create_css()
 		filename << '.html' unless filename[/\.(x)?html$/]
+		filename.gsub!(/[\/:]/, '_')
 		File.open(@dir + filename, 'w'){|f| f.write(@doc.to_html)}
 	end
 
@@ -202,7 +241,7 @@ class WikiePub
 		CSS
 		File.open(@dir + 'styles.css', 'w'){|f| f.write(content)}
 	end
-	
+		
 end
 
 unless ARGV.length == 3 or ARGV.length == 1
@@ -212,6 +251,9 @@ unless ARGV.length == 3 or ARGV.length == 1
 		save_dir
 		base_url
 		{url}+"
+	puts "In the config_file metadata can be specified using a : e.g."
+	puts ":author:Urobuchi Gen"
+	puts ":series:Fate/Zero"
 	exit
 end
 
@@ -235,15 +277,29 @@ elsif ARGV.length == 1 then
 	save_dir, base_url = lines[0].strip, lines[1].strip
 	w = WikiePub.new save_dir
 	
-	lines[2..-1].each do |url|
+	meta = {}
+	lines[2..-1].each do |line|
+		line.strip!
 		
+		if line[0] == ':' then
+			if line.length == 1 then
+				meta={}
+				puts "metadata cleared"
+				sleep 4 + (rand 3)
+			else
+				split = line.split ':'
+				meta[split[1]] = split[2]
+				puts "#{split[1]}: #{split[2]}"
+			end
+			next
+		end
 		#Remove the base path from the url if it is there
-		url.strip!
-		url_part = url.sub base_url, ""
+		url_part = line.sub base_url, ""
 
 		w.tranform_to_epub_friendly(
 			base_url, 
-			url_part
+			url_part,
+			meta
 		)
 		
 		w.write_html_to_file
