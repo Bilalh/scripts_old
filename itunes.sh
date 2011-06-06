@@ -1,7 +1,10 @@
 #!/bin/bash
 # Bilal Hussain
+
 # Controls Itunes from the command line
 # no external dependencies 
+
+#  jp2a /Users/bilalh/Desktop/Untitled.jpg -i --height=10
 
 usage () {
 	echo "Usage: `basename $0` <option>";
@@ -31,7 +34,7 @@ usage () {
 	echo 
 	echo " (l) playlist        : List all the playlists";
 	echo " (l) playlist {name} : Plays the specified playlist ";
-	echo " (c) current         : List the first ten songs of the playlist";
+	echo " (c) current         : List the songs of the current playlist";
 	echo
 	echo " (d) random          : Plays a random album";
 	echo " (f) shuffle         : Toggles shuffle";
@@ -174,6 +177,7 @@ while [ $# -gt 0 ]; do
 
 		"prev" | "b" | "back" ) echo "Going to previous track.";
 			osascript -e 'tell application "iTunes" to previous track';
+			current_song
 			break ;;
 		"rewind" | "r" ) echo "Rewinding track.";
 			osascript -e 'tell application "iTunes" to back track';
@@ -323,7 +327,7 @@ while [ $# -gt 0 ]; do
 			fi 
  		break ;;
 		
-		[0-5] ) echo "Set rating to $arg stars"
+		[0-5] ) echo "Set rating to $arg stars?"
 			current_song
 			RATE=0
 			
@@ -346,7 +350,7 @@ while [ $# -gt 0 ]; do
 			break ;;
 		
 		# bash does not do floating points calc
-		"4.5" | 6) echo "Set rating to 4½ stars"
+		"4.5" | 6) echo "Set rating to 4½ stars?"
 		current_song
 		RATE=0
 		

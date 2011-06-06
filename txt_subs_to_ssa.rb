@@ -2,7 +2,7 @@
 # Bilal Hussain
 
 # converts from the format 
-#  00:00:50:...gdy ten mur zacznie pIkaE.
+#  00:00:00:...gdy ten mur zacznie pIkaE.
 #  00:00:06:...i wycipigam d>=oO.
 # to ssa format
 # Dialogue: 0, 0:00:00:00, 0:00:00:06, JPN,,0000,0000,0000,, BudzI siI ze snu na jawie...
