@@ -257,7 +257,7 @@ unless ARGV.length == 3 or ARGV.length == 1
 	exit
 end
 
-if ARGV.length == 4 then
+if ARGV.length == 3 then
 	w = WikiePub.new(ARGV[0])
 
 	#Remove the base path from the url if it is there
