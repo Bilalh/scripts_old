@@ -22,7 +22,7 @@ class WikiePub
 	# Array of strings of the elements to remove 
 	# by css e.g.   table.toc
 	# by xpath e.g. //script
-	attr_accessor :css_arr, :xpath_arr
+	attr_accessor :css_arr, :xpath_arr, :title_gsub_arr
 	
 	def initialize(base_dir)
 		@dir = File.expand_path(base_dir) + '/'
@@ -35,8 +35,11 @@ class WikiePub
 							 ]
 
 		@xpath_arr = ['//script', '//table[@border="1"]//*[contains(., "Main Page")]'
-									
 								 ]
+		
+		@title_gsub_arr = ['\\s*-\\s*Baka-Tsuki','\\s?Full Text' 
+											]
+		
 	end
 
 	def tranform_to_epub_friendly(base,page,meta_elements={},resize_images=true)
@@ -143,11 +146,13 @@ class WikiePub
 		text_node  = title.children.first
 
 		text =  text_node.content
-		text.gsub! /\s*-\s*Baka-Tsuki/i, ""
-		text.gsub! /\s?Full Text/i, ""
+		title_gsub_arr.each do |s|
+			text.gsub! /#{s}/i, ""
+		end
+		
 		text.gsub! /[- :_]*Volume\s*(\d+)/i, ' - Volume \1'
 		text_node.content = text
-		
+
 		
 		heading = doc.css('h1#firstHeading')
 		heading.children.last.content = text
@@ -328,12 +333,16 @@ class WikiePubConfig
 			w.css_arr={} if !bool
 		when 'xpath'
 			w.xpath_arr={} if !bool
+		when 'title_gsub'
+			w.title_gsub_arr={} if !bool
 			
 		when /css:.+/
-			w_array_add line, bool, 'css_array', w.css_arr
+			w_array_add line, bool, 'css_arr', w.css_arr
 		when /xpath:.+/
-			w_array_add line, bool, 'xpath_array', w.xpath_arr
-			
+			w_array_add line, bool, 'xpath_arr', w.xpath_arr
+		when /title_gsub:.+/
+			w_array_add line, bool, 'title_gsub_arr', w.title_gsub_arr
+	
 		else 
 			puts "#{line} #{bool}"
 			opts[line.to_sym] = bool
@@ -341,6 +350,7 @@ class WikiePubConfig
 		
 	end
 	
+	# adds or removes or clear the array
 	def w_array_add(line, bool,name,arr)
 		split = line.split ':'
 		arg = split[1..-1].flatten.join ''
