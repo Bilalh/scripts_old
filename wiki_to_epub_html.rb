@@ -34,7 +34,8 @@ class WikiePub
 								'div.thumbcaption', 'div.printfooter', 'div.portlet'
 							 ]
 
-		@xpath_arr = ['//script', '//table[@border="1"]//*[contains(., "Main Page")]'
+		@xpath_arr = ['//script', '//table[@border="1"]//*[contains(., "Main Page")]',
+										'//comment()'
 								 ]
 		
 		@title_gsub_arr = ['\\s*-\\s*Baka-Tsuki','\\s?Full Text' 
@@ -280,10 +281,11 @@ class WikiePubConfig
 		w = WikiePub.new save_dir
 
 		meta = {}
-		opts = {}
+		opts = {resize_images:true}
 		lines[2..-1].each do |line|
 			line.strip!
-
+			next if line.length == 0 or line[0]=='#'
+			
 			case line[0]
 			when ':' 
 				parse_meta_opts(meta,line)
@@ -375,7 +377,7 @@ class WikiePubConfig
 		puts "Also options can be used such as -resize_images and +resize_images"
 		puts "+css:ele to add css elements -css:ele to remove, same for xpath as well"
 		puts "-css to remove all elements, -xpath remove all elements"
-		puts ""
+		puts "# comment"
 		
 	end
 	
