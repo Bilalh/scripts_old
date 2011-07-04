@@ -14,19 +14,25 @@ OpfGlob = "*.opf"
 
 # Returns the series, series_num and title of the opf
 def opf_parse(opf_file)
-	opf  = XML::Parser.file(opf_file).parse
-	meta = opf.root.children[1]
+	puts "Parsing #{opf_file}"
+	File.open(opf_file) do |file|
+		opf  = XML::Parser.io(file).parse
+		meta = opf.root.children[1]
+
+		series = series_num = title = nil
+		series_res     = meta.find("//opf:meta[@name='calibre:series']/@content")
+		series         = series_res[0].value if series_res.length > 0
+
+		series_num_res = meta.find("//opf:meta[@name='calibre:series_index']/@content")
+		series_num     = series_num_res[0].value if series_num_res.length > 0
+
+		title_res      = meta.find("//dc:title/text()")
+		title          = title_res[0] if series_num_res.length > 0 
+		puts "Series: #{series} series_num: #{series_num} title: #{title}"
+		return series, series_num, title
+	end
 	
-	series = series_num = title = nil
-	series_res     = meta.find("//opf:meta[@name='calibre:series']/@content")
-	series         = series_res[0].value if series_res.length > 0
 	
-	series_num_res = meta.find("//opf:meta[@name='calibre:series_index']/@content")
-	series_num     = series_num_res[0].value if series_num_res.length > 0
-	
-	title_res      = meta.find("//dc:title/text()")
-	title          = title_res[0] if series_num_res.length > 0 
-	return series, series_num, title
 end
 
 def add_series(db, series, series_num, title)
@@ -42,6 +48,7 @@ def add_series(db, series, series_num, title)
 	book_id = check[0]['book_id']
 	
 	return unless book_id 
+	puts "Book_id #{book_id}"
 	
 	if check[0]['name'] == nil
 		

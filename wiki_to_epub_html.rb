@@ -1,4 +1,5 @@
-#!/usr/bin/env ruby19
+#!/usr/bin/env ruby19 -KU
+# encoding: UTF-8
 require 'nokogiri'
 require 'open-uri'
 require 'fileutils'
@@ -43,12 +44,17 @@ class WikiePub
 		
 	end
 
-	def tranform_to_epub_friendly(base,page,meta_elements={},resize_images=true)
+	def tranform_to_epub_friendly(base,page,meta_elements={},resize_images=true,images=true)
 		@base  = base
-		@doc   = Nokogiri::HTML(open(base + page))
+		html = open(base + page)
+		@doc = Nokogiri::HTML(html.read)
+		@doc.encoding = 'utf-8'
 		puts "Downloading #{base + page}"
+	  yield if block_given?
+		print "Meta: "
+		p meta_elements
 		tranform_html(@doc,meta_elements)
-		get_images(@doc,resize_images)
+		get_images(@doc,resize_images) if images
 	end
 
 	# Getter larger images and place them in @dir/images/
@@ -103,7 +109,6 @@ class WikiePub
 	def tranform_html(doc, meta_elements={})
 		# Finds by the number by counting the list elements  
 		
-		
 		# Places the footnote inline
 		doc.css('ol.references').xpath('li').each do |li|
 			
@@ -146,7 +151,11 @@ class WikiePub
 		title      = doc.xpath('//title');
 		text_node  = title.children.first
 
-		text =  text_node.content
+		if meta_elements['title'] then
+			text = meta_elements['title']
+		else
+			text = text_node.content
+		end
 		title_gsub_arr.each do |s|
 			text.gsub! /#{s}/i, ""
 		end
@@ -156,7 +165,8 @@ class WikiePub
 
 		
 		heading = doc.css('h1#firstHeading')
-		heading.children.last.content = text
+		heading.children.last.content = text unless heading.empty?
+			
 		@title =  text.gsub ' ', '_'
 		
 		unless meta_elements.has_key? 'series'
@@ -185,7 +195,7 @@ class WikiePub
 	# Write the transform xml to file
 	def write_html_to_file(filename=@title)
 		create_css()
-		filename << '.html' unless filename[/\.(x)?html$/]
+		filename << '.html' unless filename[/\.(x)?htm(l)?$/]
 		filename.gsub!(/[\/:]/, '_')
 		File.open(@dir + filename, 'w'){|f| f.write(@doc.to_html)}
 		puts "Saved to #{@dir + filename}"
@@ -280,35 +290,51 @@ class WikiePubConfig
 		save_dir, base_url = lines[0].strip, lines[1].strip
 		w = WikiePub.new save_dir
 
-		meta = {}
-		opts = {resize_images:true}
+		@meta = {}
+		@opts = {resize_images:true}
+		
+		@title = nil;
+		@index = 1;
 		lines[2..-1].each do |line|
 			line.strip!
 			next if line.length == 0 or line[0]=='#'
 			
 			case line[0]
 			when ':' 
-				parse_meta_opts(meta,line)
+				parse_meta_opts(@meta,line)
 				next
 			when '+'
-				parse_opts(w,opts,line[1..-1],true)
+				parse_opts(w,@opts,line[1..-1],true)
 				next
 			when '-'
-				parse_opts(w,opts,line[1..-1], false)			
+				parse_opts(w,@opts,line[1..-1], false)			
 				next
 			end
 			
+			if @opts[:numbered] then
+				@meta['title'] =  "#{@title} #{@index}"
+			end		 
+			
 			#Remove the base path from the url if it is there
 			url_part = line.sub base_url, ""
-
+			
 			w.tranform_to_epub_friendly(
 				base_url, 
 				url_part,
-				meta,
-				opts[:resize_images]
-			)
+				@meta,
+				@opts[:resize_images],
+				@opts[:images]
+			) {	print "Options: "; p @opts }
 
-			w.write_html_to_file
+			if @opts[:numbered] and @opts[:filename] then
+				fmt = @opts[:fmt] || "%d"
+				w.write_html_to_file ("%s#{fmt}" % [@opts[:filename], @index])
+			else
+				w.write_html_to_file
+			end 
+			
+			@index  +=1 if @opts[:numbered]
+			
 			puts
 		end
 	end
@@ -337,7 +363,32 @@ class WikiePubConfig
 			w.xpath_arr={} if !bool
 		when 'title_gsub'
 			w.title_gsub_arr={} if !bool
-			
+		
+		when 'numbered'
+			if bool then
+				@title = @meta['title']
+				@index = 1
+				opts[line.to_sym] = bool
+			else 
+				@title = nil
+				opts.delete line.to_sym
+			end
+			puts "#{line} #{bool}"
+		
+		when /(fmt|filename):.+/
+			split = line.split ':'
+			arg = split[1..-1].flatten.join ''
+			if bool then
+				opts[split[0].to_sym] = arg
+			else
+				opts.delete split[0].to_sym
+			end
+		
+		when /index:\d+/
+			split = line.split ':'
+			arg = split[1..-1].flatten.join ''
+			@index = Integer(arg)
+		
 		when /css:.+/
 			w_array_add line, bool, 'css_arr', w.css_arr
 		when /xpath:.+/
