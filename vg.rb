@@ -4,11 +4,11 @@ require 'nokogiri'
 require 'open-uri'
 require 'fileutils'
 require 'htmlentities'
+require "cgi"
 
-
-class Vg
-
-
+# gets data from vgmdb 
+class Vgmdb
+	
 	def initialize()
 		@names = {
 			'en'       => :@english,
@@ -20,6 +20,30 @@ class Vg
 		}
 	end
 	
+	def search(string)
+		#url = "http://vgmdb.net/search?q=#{CGI.escape string}"
+		url = File.expand_path("~/Desktop/test3.html")
+		
+		doc = Nokogiri::HTML(open(url).read)
+		album_results = doc.css 'div#albumresults tr'
+		rows_tr = album_results[1..-1]
+		
+		rows =[]
+		
+		rows_tr.each do |tr|
+			row = {}
+			row[:catalog]  = tr.children[0].text
+			row[:released] = tr.children[3].text
+			row[:album]    = spilt_lang tr.children[2].children[0].children
+			row[:url]      = tr.children[2].children[0]['href']
+			rows<<row
+		end
+		
+		return rows
+	end
+	
+	
+	# Returns the data at the vgmdb url as a hash
 	def get_data(url)
 		doc = Nokogiri::HTML(open(url).read)
 		
@@ -27,7 +51,7 @@ class Vg
 		get_titles(doc,hash)
 		get_meta(doc,hash)
 		get_tracks(doc,hash)
-		# get_notes(doc,hash)
+		get_notes(doc,hash)
 		return hash
 	end
 	
@@ -86,11 +110,12 @@ class Vg
 	end
 
 	def get_notes(doc,hash)
+		puts "Getting notes"
 		notes = ""
 		doc.css('div.page table tr td div div.smallfont')[-1].children.each do |e|
 		notes <<  e.text  << "\n" if e.text != ""
 		end
-		hash[:notes] = notes
+		hash[:notes] = HTMLEntities.new.decode notes
 	end
 	
 	def get_tracks(doc, hash)
@@ -147,13 +172,13 @@ class Vg
 	
 	private 
 	# splits the different langs into a hash
-	def spilt_lang(ele)
+	def spilt_lang(elems)
 		h = {}
-		#TODO check for nothing
-		ele_a = ele.is_a?(Nokogiri::XML::NodeSet)  ? ele[0] : ele
-		
-		lang = (ele_a.has_attribute? 'lang') ? @names[ele_a['lang']] : :@english
-		ele.each { |ele| h[lang] = ele.text.strip.sub ' / ', "" }
+		elems.each do |ele|
+			#TODO check for nothing
+			lang = (ele.has_attribute? 'lang') ? @names[ele['lang']] : :@english
+			h[lang] = ele.text.strip.sub /^\/ /, ""
+		end
 		return h
 	end
 	
@@ -164,16 +189,20 @@ class Track
 end
 
 
-#url = "http://vgmdb.net/album/13192"
-# url = 'http://vgmdb.net/album/3885'
-# url = File.expand_path("~/Desktop/test.html")
-url = File.expand_path("~/Desktop/test2.html")
-vg = Vg.new()
-hash = vg.get_data(url)
-puts "Data"
-hash.each_pair do |name, val|
-	puts "#{name} => #{val}"
-end
+
+vg = Vgmdb.new()
+puts vg.search("Atelier Meruru")
+
+# #url = "http://vgmdb.net/album/13192"
+# # url = 'http://vgmdb.net/album/3885'
+# # url = File.expand_path("~/Desktop/test.html")
+# url = File.expand_path("~/Desktop/test2.html")
+# hash = vg.get_data(url)
+# puts "Data"
+# hash.each_pair do |name, val|
+# 	puts "#{name} => #{val}"
+# end
+
 
 
 
