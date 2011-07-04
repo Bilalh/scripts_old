@@ -22,10 +22,12 @@ class Vg
 	
 	def get_data(url)
 		doc = Nokogiri::HTML(open(url).read)
+		
 		hash = {}
 		get_titles(doc,hash)
 		get_meta(doc,hash)
-		# get_tracks(doc,hash)
+		get_tracks(doc,hash)
+		# get_notes(doc,hash)
 		return hash
 	end
 	
@@ -81,6 +83,14 @@ class Vg
 		hash[:title] = titles
 		
 		puts
+	end
+
+	def get_notes(doc,hash)
+		notes = ""
+		doc.css('div.page table tr td div div.smallfont')[-1].children.each do |e|
+		notes <<  e.text  << "\n" if e.text != ""
+		end
+		hash[:notes] = notes
 	end
 	
 	def get_tracks(doc, hash)
