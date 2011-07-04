@@ -23,18 +23,61 @@ class Vg
 	def get_data(url)
 		doc = Nokogiri::HTML(open(url).read)
 		hash = {}
-		# get_titles(doc,hash)
-		get_tracks(doc,hash)
+		get_titles(doc,hash)
+		get_meta(doc,hash)
+		# get_tracks(doc,hash)
 		return hash
+	end
+	
+	def get_meta(doc,hash)
+		puts "Getting metadata"
+		
+		meta = doc.css('table#album_infobit_large')
+		
+		# get the data from the specific row
+		get_data       = ->(id){  return meta.children[id].children[2].text.strip  }
+		# get the data from the specific row spilt into lang
+		get_spilt_data = ->(id){  
+			arr = [] 
+			meta.children[id].children[2].children.each do |e|
+				if e.children.length > 0 then
+					arr << spilt_lang(e.children)
+				end
+			end
+			return arr
+		}
+		
+		hash[:catalog]   = get_data[0]
+		hash[:date]      = get_data[1]
+		hash[:year]      = hash[:date][/\d{4}$/]
+		hash[:publisher] = get_spilt_data[6]
+		hash[:composer]  = get_spilt_data[8]
+		hash[:arranger]  = get_spilt_data[8]
+		hash[:performer] = get_spilt_data[9]
+				
+				
+		stats     = doc.css('tr> td#rightcolumn > div > div.smallfont > div > b')
+		get_stats = ->(id){  return stats[id].next.next.text.strip  }
+		
+		hash[:category] = get_stats[2]
+		
+		ps = ->(id){ 
+			if stats[id].next.next.children.length > 0 then
+				 spilt_lang(stats[id].next.next.children)
+			else 
+				stats[id].next.next.text.split(', ').map { |e| {:@english => e.strip} }
+			end
+		}
+		
+		hash[:products] =  ps[3]
+		hash[:platforms] = ps[4]
+		puts
 	end
 	
 	def get_titles(doc, hash)
 		puts "Getting Titles"
 		titles ={}
-		doc.css('h1 > span.albumtitle').each do |ele|
-			titles[@names[ele['lang']]] = ele.text.sub ' / ', ""
-			puts 	titles[@names[ele['lang']]]
-		end
+		titles = spilt_lang(doc.css('h1 > span.albumtitle'))
 		hash[:title] = titles
 		
 		puts
@@ -75,15 +118,12 @@ class Vg
 						track                        = Track.new
 						track.track_num              = num
 						track.disc_num               = num_discs
-						track.total_discs            = num_discs
 						track.time                   = track_tr.children[4].text
 						tracks["#{disc_num}-#{num}"] = track
 					end
 					
 					track.instance_variable_set(ref[:lang], coder.decode(track_tr.children[2].text))
-					
 					p track
-					# break
 				end
 				
 				puts
@@ -95,16 +135,29 @@ class Vg
 		puts
 	end #get_tracks
 	
+	private 
+	# splits the different langs into a hash
+	def spilt_lang(ele)
+		h = {}
+		#TODO check for nothing
+		ele_a = ele.is_a?(Nokogiri::XML::NodeSet)  ? ele[0] : ele
+		
+		lang = (ele_a.has_attribute? 'lang') ? @names[ele_a['lang']] : :@english
+		ele.each { |ele| h[lang] = ele.text.strip.sub ' / ', "" }
+		return h
+	end
+	
 end
 
 class Track
-	attr_accessor :engish, :japanese, :romaji, :track_num, :disc_num, :total_discs, :time
-		
+	attr_accessor :engish, :japanese, :romaji, :track_num, :disc_num, :time
 end
 
 
 #url = "http://vgmdb.net/album/13192"
-url = File.expand_path("~/Desktop/test.html")
+# url = 'http://vgmdb.net/album/3885'
+# url = File.expand_path("~/Desktop/test.html")
+url = File.expand_path("~/Desktop/test2.html")
 vg = Vg.new()
 hash = vg.get_data(url)
 puts "Data"
