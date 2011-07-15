@@ -29,8 +29,7 @@ function scrobble () {
 	
 	[ "$album" = "1" ] && album=""
 	echo "### $scrobbler -e utf8 -l \"`printf '%d:%d' $(($time%3600/60)) $(($time%60))`\" -a \"$artist\" -b \"$album\" --title \"$title\""
-	$scrobbler -e utf8 \
-		-l "$time" -a "$artist" -b "$album" --title "$title"
+	$scrobbler -e utf8 -l "`printf '%d:%d' $(($time%3600/60)) $(($time%60))`" -a "$artist" -b "$album" --title "$title"
 }
 
 for f; do
