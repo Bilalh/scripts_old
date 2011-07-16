@@ -2,10 +2,12 @@
 # Allows the user to choice a director to play music from
 # also scrobble to last.fm 
 # works with unicode and whitespace
+# Ctrl-\ to quit
 
 scrobber=${MPLAYER_LASTFM:-mplayerlastfm.sh}	
 dir=${MPN_DIR:-$HOME/Movies/add/}
 cd "$dir" 
+trap "" INT
 
 export LC_ALL='C';
 IFS=$'\x0a';
