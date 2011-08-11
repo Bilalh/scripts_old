@@ -294,7 +294,7 @@ while [ $# -gt 0 ]; do
 					type="$2";
 					shift; # get rids of search/@
 					shift; # get rid of type
-					
+										
 					osascript <<-APPLESCRIPT
 					tell application "iTunes"
 						delete tracks of playlist "results"

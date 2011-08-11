@@ -12,6 +12,8 @@
 #
 #  Press  Ctrl-\ to quit
 #
+#  The output of track names can be turned off by using export DISPLAY_TRACK_INFO=false
+#
 # Known problems:
 #	* 'q' interrupts only playback of current file; press and *hold* ctrl-C
 #	* even if you skip file immediately with Enter or 'q', it gets scrobbled - see below
@@ -21,38 +23,44 @@
 # in mplayer - it will skip to the next track without scrobbling.
 #
 
-kill `ps aux | grep lastfmsubmitd | grep -v grep  | awk '{print $2}'` &>/dev/null; lastfmsubmitd
+# Uncomment this line (and comment the next) if you want lastfmsubmitd to die when the program quits
+# kill `ps aux | grep lastfmsubmitd | grep -v grep  | awk '{print $2}'` &>/dev/null || lastfmsubmitd
+kill `ps aux | grep lastfmsubmitd | grep -v grep  | awk '{print $2}'` &>/dev/null || lastfmsubmitd &
 
 #Set defaults
 player=${LASTFM_PLAYER:=mplayer}
 taginfo=${TAGINFO:=taginfo}
 scrobbler=${LASTFM_SUBMIT:=lastfmsubmit}
+scrobbler_echo=${SCROBBLER_ECHO:=true}
+display=${DISPLAY_TRACK_INFO:=true}
 
 function scrobble () {
+	read title;	
 	read album;
 	read artist;
-	read title;
 	read time;	
 	
 	[ "$album" = "1" ] && album=""
-	echo "### $scrobbler -e utf8 -l \"$time\" -a \"$artist\" -b \"$album\" --title \"$title\""
+	if $scrobbler_echo; then 
+		echo "### $scrobbler -e utf8 -l \"$time\" -a \"$artist\" -b \"$album\" --title \"$title\""
+	fi
 	$scrobbler -e utf8 -l "$time" -a "$artist" -b "$album" --title "$title"
 }
 
 # Allows quiting 
-trap "exit"  HUP PIPE KILL QUIT TERM EXIT
+trap "exit" HUP PIPE KILL QUIT TERM EXIT
+for i in {1..1}; do
+	for f; do
+		if $display; then $taginfo --info 2>/dev/null "$f"; fi
+		#$player "$f" || continue
 
-for i in {1..10}; do
-for f; do
-	# $player "$f" || continue
-
-	case "$f" in
-	*.mp3 | *.m4a | *.flac | *.ogg )
-		$taginfo -short "$f" \
-		|  scrobble
-		;;
-	esac
-	sleep 5+$(($RANDOM%30));
+		case "$f" in
+		*.mp3 | *.m4a | *.flac | *.ogg )
+			$taginfo --short  2>/dev/null  "$f" \
+			|  scrobble
+			;;
+		esac
+		sleep 30+$(($RANDOM%40));
+	done
+sleep 60+$(($RANDOM%30));
 done
-sleep 20+$(($RANDOM%30));
-done;
