@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby19
 # encoding: UTF-8
 
-# Aigns equals signs in many languages requires ruby 1.9  
+# Aigns equals signs in many languages requires ruby 1.9
+#based off https://raw.github.com/gist/260064/a17239172e13d058cc911c09be6bf9884444aeb8/1-tm-align-assignments-original.rb
 
 def alternation(*s); s.map(&Regexp.method(:escape)).join("|") end
 

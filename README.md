@@ -1,19 +1,20 @@
-Scripts 
-=========
-A collection of scripts:
+Scripts {#readmeTitle}
+=======
+Scripts that don’t fit any of the collections, includes scripts for re-encoding movies file for phones and doing a diff on LaTeX.
+{#description}
 
-itunes.sh
----------
-Controls Itunes from the command line
+Usage
+-----
+See each script for detail
 
-see `itunes.sh` for details 
-
-
-latexdiff-git
+Prerequisites
 -------------
-`latexdiff-git` with changes to work on Mac OS X requires `latexdiff`
+Ruby most scripts
 
-albums.applescript
-------------------
-Returns a sorted list of every album (without dups) in a the specifed playlist.
+Install 
+-------
+* Put the scripts in your `$PATH`
 
+Issues
+------
+None Yet

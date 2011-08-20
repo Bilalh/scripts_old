@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby -wKU
+# Bilal Hussain
+
 require "rubygems"
 require 'sqlite3'
 

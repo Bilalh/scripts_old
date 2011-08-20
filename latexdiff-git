@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Mondifed latexdiff-git for mac osx
+# Modified latexdiff-git for mac osx
 
 # please set the 'please define' to your repository's latexdiff-command,
 # as explained in the README file that should've come with this script.
