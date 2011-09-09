@@ -13,7 +13,7 @@ Ruby for most scripts
 
 Install 
 -------
-* Put the scripts in your `$PATH`
+* Put the scripts in your `$PATH`.
 
 Issues
 ------
