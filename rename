@@ -7,25 +7,28 @@ rename - Renames file using python regular expression.
 import re,os,os.path,sys
 from optparse import OptionParser
 
-
 parser = OptionParser(usage="Usage: %prog [OPTIONS] $regex_match $regex_sub\nExample: rename -t \".*([0-9]*).mp3\" \"Track \\1.mp3\"",version="%prog 1.1.2")
 parser.add_option("-t","--test",action="store_true",default=False,dest="test",help="Test. Display all output but do not commit new filenames.")
 (options,args) = parser.parse_args()
 
 if 2 != len(args):
 	parser.error("Incorrect number of arguments.")
+	
 try:
 	regex = re.compile(args[0])
 except Exception,e:
 	parser.error("Error parsing $regex_match.")
+	
 else:
 	if options.test:
 		lamb = lambda src,dst: "testing: %s:\t%s" % (src,dst)
 	else:
 		lamb = lambda src,dst: os.rename(src,dst)
+		
 	for ix in os.listdir('./'):
 		if re.search(args[0],ix):
 			try:
+			  
 				dst = regex.sub(args[1],ix)
 				result = lamb(ix,dst)
 				if result == None:
