@@ -1,13 +1,19 @@
-#!/usr/bin/env ruby19
+#!/usr/bin/env ruby19 -KU
+# encoding: UTF-8
 require 'optparse'
 
 Help = %{Usage: #{File.basename $0} [-t] [glob]
-Fix video files names}
-options = {}; glob = '*'
+Fix files names}
+options = {excludes:[]}; glob = '*'
 
 OptionParser.new do |opts|
 	opts.banner = Help
-	opts.on("-t", "--[no-]test", "Only display the resulting filenames") { |v| options[:test] = v }
+	opts.on("-t",  "--[no-]test", "Only display the resulting filenames") do |v|
+		options[:test] = v
+	end
+	opts.on( '-e', "--excludes" '--list a,b,c', Array, "Names to Excludes" ) do |l|
+	  options[:excludes] = l
+	end
 end.parse!
 
 case ARGV.length
@@ -24,9 +30,12 @@ lamb = if options[:test] then
 		end 
 	end
 
+
 Dir.glob(glob) do |name|
+	next if options[:excludes].include? name
 	ext = File.extname name # save the extension
 	dst = name.chomp(ext)
+	
 	# fix the name
 	dst.gsub! /[._]/, " "
 	dst.gsub! /([_ ]{0,1}\[[^\[\]]*\][_ ]{0,1})|([_ ]{0,1}\([^\[\)]*\)[_ ]{0,1})/, ""

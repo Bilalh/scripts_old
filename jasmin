@@ -1,0 +1,5 @@
+#!/bin/bash
+jasmin=${JASMIN_HOME:-"$HOME/Programming/Java/jasmin-2.4"}
+cd "$jasmin"; 
+java -jar jasmin.jar "$@"
+#java -jar "${jasmin}/jasmin.jar" "$@"
