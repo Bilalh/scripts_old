@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # Bilal Hussain
 
-# Get the specifed chapter of drowtales
+# Get the specifed chapter
 
 start_date   = [2010, 10, 02] # date of cover
 chapter      = 27

@@ -1,4 +1,5 @@
-#!/usr/bin/env ruby19 -KU
+#!/usr/bin/env ruby19 -wKU
+# Bilal Hussain
 # encoding: UTF-8
 require 'optparse'
 

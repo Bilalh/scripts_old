@@ -1,4 +1,5 @@
-#!/usr/bin/env ruby19
+#!/usr/bin/env ruby19 -wKU
+# Bilal Hussain
 require 'optparse'
 
 Help = %{Usage: #{$0} [-t] $regex_match $regex_sub [glob]
@@ -17,7 +18,7 @@ case ARGV.length
 end
 
 begin
-	regex = Regexp.new (ARGV[0])	
+	regex = Regexp.new(ARGV[0])	
 rescue RegexpError => e
 	puts "RegexpError: #{e}"; exit
 end
