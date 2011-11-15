@@ -38,8 +38,8 @@ Dir.glob(glob) do |name|
 	dst = name.chomp(ext)
 	
 	# fix the name
-	dst.gsub! /[._]/, " "
-	dst.gsub! /([_ ]{0,1}\[[^\[\]]*\][_ ]{0,1})|([_ ]{0,1}\([^\[\)]*\)[_ ]{0,1})/, ""
+	dst.gsub!(/[._]/, " ")
+	dst.gsub!(/([_ ]{0,1}\[[^\[\]]*\][_ ]{0,1})|([_ ]{0,1}\([^\[\)]*\)[_ ]{0,1})/, "")
 	dst.strip!
 	dst << "#{ext}" # puts back the extension
 	
