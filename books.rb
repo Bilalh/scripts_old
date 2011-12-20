@@ -8,8 +8,8 @@ require "rubygems"
 require 'xml'
 require 'sqlite3'
 
-Dir.chdir  File.expand_path("~/Books/")
-BooksDB = File.expand_path("~/Desktop/books.db")
+Dir.chdir  File.expand_path("~/books/")
+BooksDB = File.expand_path("~/books.db")
 OpfGlob = "*.opf"
 
 # Returns the series, series_num and title of the opf
@@ -45,9 +45,10 @@ def add_series(db, series, series_num, title)
 	SQL
 	
 	check = db.execute( query )
+	($stderr.puts "error: book not found"; return ) unless check.length > 0
 	book_id = check[0]['book_id']
 	
-	return unless book_id 
+	($stderr.puts "error: No book id"; return )  unless book_id 
 	puts "Book_id #{book_id}"
 	
 	if check[0]['name'] == nil
@@ -68,7 +69,7 @@ def add_series(db, series, series_num, title)
 			"Insert Into BookSeries(book_id,series_id,book_index) 
 			 Values(#{book_id}, #{series_id}, #{series_num})"
 		)
-		
+		puts "added #{title} to the series #{series} at index #{series_num}"
 	end
 	
 end
@@ -77,6 +78,7 @@ db = SQLite3::Database.new( BooksDB )
 db.results_as_hash = true;
 
 Dir.glob(OpfGlob).each do |opf_file|
+	puts
 	series, series_num, title = opf_parse(opf_file)
 	next if (series.nil? or series_num.nil? or title.nil?)
 	add_series(db,series, series_num, title )

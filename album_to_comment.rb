@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# encoding: utf-8
 # Bilal Hussain
 
 # Set the comment fields to the album 
