@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby19 -wKU
-# Sorts  a collection by name
-# Bilal  Hussain
+# Sorts a collection in iBooks by name.
+# After updating the db, turn the phone off then on again to see the changes.
+# Bilal Hussain
 
 (puts "#{File.basename $0} Collection Z_PK [iBooks sqlite]"; exit) if ARGV.length != 1 && ARGV.length != 2
 
