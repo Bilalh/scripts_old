@@ -1,8 +1,14 @@
 #!/usr/bin/env ruby19 -KU
 # Bilal Hussain
 
+# Allows adding games to Backloggery
+# Requies:
+# Ruby 1.9+
+# Mechanize gem
+# Requires a Backloggery account
+# A cookie for logging in (firefox's format)
+
 require 'mechanize'
-require "pp"
 
 class Backloggery
 	
@@ -35,9 +41,28 @@ class Backloggery
 		other:          3
 	}
 
+	Ratings={
+		none:  5,
+		one:   4,
+		two:   3,
+		three: 2,
+		four:  1,
+		five:  0,
+		0 =>   5,
+		1 =>   4,
+		2 =>   3,
+		3 =>   2,
+		4 =>   1,
+		5 =>   0
+	}
+
 	TextFields = [
 		:note,
 		:comments,
+		:online,
+		:achieve1,
+		:achieve2,
+		:comp
 	]
 
 	ConsoleFields=[
@@ -47,7 +72,13 @@ class Backloggery
 	
 	RadioButtons =[
 		:own,
-		:complete
+		:complete,
+		:rating
+	]
+	
+	CheckButtons =[
+		:unplayed,
+		:playing,
 	]
 	
 	SelectionList =[
@@ -57,17 +88,19 @@ class Backloggery
 	Mapping ={
 		own:      Ownership,
 		complete: Progress,
-		region:   Regions
+		region:   Regions,
+		rating:   Ratings
 	}
 
+	#  cookies is the path to the cookies file
 	def initialize cookies=File.expand_path('~/cookies.txt')
 		@agent = Mechanize.new
 		@agent.user_agent = 'Mozilla firefox'
 		@agent.cookie_jar.load cookies, :cookiestxt
 	end
 	
-	def add_game(name,args={})
-		page = @agent.get 'http://www.backloggery.com/newgame.php?user=bhterra'
+	def add_game(user,name,args={})
+		page = @agent.get "http://www.backloggery.com/newgame.php?user=#{user}"
 		form = page.form
 		
 		# name can't be done easily
@@ -83,8 +116,12 @@ class Backloggery
 			form[name.to_s] = val
 		end
 
-		
-		# For radiobuttons
+		(args.keys & CheckButtons).each do |name|
+			val  = args[name]
+			val  = Consoles[val] if Consoles.has_key? val
+			form.checkbox_with(:name =>  name.to_s).checked = true
+		end
+
 		buttons =  lambda do |allowed,method, &block|
 			(args.keys & allowed).each do |name|
 				val   =  args[name]
@@ -120,7 +157,7 @@ class Backloggery
 		# 	puts "%30s  => #{short}," % name
 		# 	
 		# end
-		
+
 		submitForm form
 	end
 
@@ -290,12 +327,25 @@ class Backloggery
 	
 end
 
-
-b = Backloggery.new
-b.add_game   "tes3t7s",  
-	 console: :PSP, 
-	complete: :completed,   
-	     own: :rented, 
-	  region: :NTSCJ,
-	comments: "Some comments",
-	    note: "Notes"
+#  Example 
+if $0 == __FILE__
+	
+	b = Backloggery.new
+	b.add_game   "bhterra", "Game Name",  
+		 console: :PSP, 
+		complete: :unfinished,   
+		     own: :rented, 
+		  region: :NTSCJ,
+		comments: "Some comments",
+		    note: "Some Notes",
+		  rating: 3,
+		
+		unplayed: true,
+		 playing: false,
+		 # comp: "Some Compilation"  # Uncommet if in a Compilation
+		
+  orig_console: :SNES,
+		  online: "Some online info",
+		achieve1: 1,   # Number of Achievements
+		achieve2: 2,   # Total number of Achievements
+end
