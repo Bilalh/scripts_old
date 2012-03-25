@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby19 -wKU
-# Sorts a collection in iBooks by name.
+# Sorts a collection in iBooks by author then name.
 # After updating the db, turn the phone off then on again to see the changes.
 # Bilal Hussain
 
@@ -22,12 +22,12 @@ db = SQLite3::Database.new( IBooksDB )
 #db.results_as_hash = true;
 
 query = <<-SQL
-Select  b.Z_PK, b.ZSORTTITLE ,b.ZSORTKEY
+Select  b.Z_PK, b.ZSORTTITLE ,b.ZSORTKEY, ZSORTAUTHOR
 from ZBKCOLLECTIONMEMBER c
 Join ZBKBOOKINFO  b on c.ZDATABASEKEY = b.ZDATABASEKEY
 Join ZBKCOLLECTION cc on cc.Z_PK = c.ZCOLLECTION
 where cc.Z_PK='#{collectionId}'
-Order by c.ZCOLLECTION, b.ZSORTTITLE
+Order by b.ZSORTAUTHOR, b.ZSORTTITLE
 SQL
 
 results = db.execute( query )
