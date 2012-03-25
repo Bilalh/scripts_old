@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby19 -KU
-require 'rubygems'
+# Bilal Hussain
+
 require 'mechanize'
 require "pp"
 
@@ -48,18 +49,10 @@ class Backloggery
 		region:   Regions
 	}
 	
-	
-	# Fields 
-	# name
-	# console
-	# complete   (radiobutton)
-	# note
-
-	
-	def initialize
+	def initialize cookies=File.expand_path('~/cookies.txt')
 		@agent = Mechanize.new
 		@agent.user_agent = 'Mozilla firefox'
-		@agent.cookie_jar.load File.expand_path('~/cookies.txt'), :cookiestxt
+		@agent.cookie_jar.load cookies, :cookiestxt
 	end
 	
 	def add_game(name,args={})
@@ -91,21 +84,22 @@ class Backloggery
 			end
 		end
 		
+		# Radio buttons
 		buttons.call(RadioButtons,:radiobuttons_with) do |button,index|
 			button[index].check
 		end
 		
+		# Selection list
 		buttons.call(SelectionList,:field_with) do |button,index|
 			button.options[index].select
 		end
-				
-		# form.fields.each { |e| pp e.name if e.name != 'console' &&  e.name != 'orig_console'  }
+		
 		submitForm form
 	end
 
 	private
-	def submitForm(form)
-		button = form.buttons[-1] # stealth add
+	def submitForm(form,stealth_add=false)
+		button = form.buttons[stealth_add ? 0 : -1] # stealth add
 		results = @agent.submit(form, button)
 	end
 	
@@ -113,4 +107,10 @@ end
 
 
 b = Backloggery.new
-b.add_game  "test4s",  console:"SNES", complete: :completed,   own:3, region: :NTSCJ
+b.add_game   "test7s",  
+	 console: "SNES", 
+	complete: :completed,   
+	     own: :rented, 
+	  region: :NTSCJ,
+	comments: "Some comments",
+	    note: "Notes"
