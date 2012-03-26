@@ -81,6 +81,7 @@ class Backloggery
 	CheckButtons =[
 		:unplayed,
 		:playing,
+		:wishlist
 	]
 	
 	SelectionList =[
@@ -127,8 +128,7 @@ class Backloggery
 
 		(args.keys & CheckButtons).each do |name|
 			val  = args[name]
-			val  = Consoles[val] if Consoles.has_key? val
-			form.checkbox_with(:name =>  name.to_s).checked = true
+			form.checkbox_with(:name =>  name.to_s).checked = val
 		end
 
 		buttons =  lambda do |allowed,method, &block|
@@ -255,6 +255,10 @@ class Backloggery
 		                      "Gamate"  => "Gamate",
 		                "Game & Watch"  => "GW",
 		                   "Game Gear"  => "GG",
+		                          "GB"  => "GBC",
+		                    "Game Boy"  => "GBC",
+                    "Game Boy Color"  => "GBC",
+                   "Game Boy Colour"  => "GBC",
 		              "Game Boy/Color"  => "GBC",
 		            "Game Boy Advance"  => "GBA",
 		                    "e-Reader"  => "eRdr",
@@ -265,6 +269,8 @@ class Backloggery
 		           "Games For Windows"  => "G4W",
 		                    "Game.com"  => "GCOM",
 		        "Genesis / Mega Drive"  => "GEN",
+		                     "Genesis"  => "GEN",
+		                  "Mega Drive"  => "GEN",
 		                    "GetGames"  => "GGames",
 		                    "Gizmondo"  => "Gizm",
 		              "Good Old Games"  => "GOG",
@@ -296,8 +302,11 @@ class Backloggery
 		                     "Neo Geo"  => "NG",
 		                  "Neo Geo CD"  => "NGCD",
 		        "Neo Geo Pocket/Color"  => "NGPC",
+		              "Neo Geo Pocket"  => "NGPC",
+		        "Neo Geo Pocket Color"  => "NGPC",
 		                "Nintendo 3DS"  => "3DS",
 		               "3DS Downloads"  => "3DSDL",
+		                          "DS"  => "NDS",	
 		                 "Nintendo DS"  => "NDS",
 		                 "Nintendo 64"  => "N64",
 		               "Nintendo 64DD"  => "64DD",
@@ -314,6 +323,8 @@ class Backloggery
 		                       "PC-FX"  => "PCFX",
 		                     "Pinball"  => "PB",
 		                 "PlayStation"  => "PS",
+		                         "PSX"  => "PS",
+		                         "PS1"  => "PS",
 		               "PlayStation 2"  => "PS2",
 		               "PlayStation 3"  => "PS3",
 		         "PlayStation Network"  => "PSN",
@@ -369,7 +380,7 @@ end
 if $0 == __FILE__
 	
 	b = Backloggery.new
-	b.add_game   "bhterra", "Game Name",  
+	b.add_game   "bhterra", "A Game Name",  
 		 console: :PSP, 
 		complete: :mastered,   
 		     own: :rented, 
@@ -382,8 +393,8 @@ if $0 == __FILE__
 		 playing: false,
 		 # comp: "Some Compilation",  # Uncommet if in a Compilation
 	stealth_add: true,
+		wishlist: true	,
 	
-		
   orig_console: :SNES,
 		  online: "Some online info",
 		achieve1: 1,   # Number of Achievements
