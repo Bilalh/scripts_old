@@ -102,11 +102,13 @@ class Backloggery
 		@agent.cookie_jar.load cookies, :cookiestxt
 	end
 	
+	#  Returns the userpage for a user
 	def userpage user
 		@agent.get "http://www.backloggery.com/games.php?user=#{user}"
 	end
 	
 	
+	# Adds a game 
 	def add_game(user,title,args={})
 		# puts title
 		# pp args
@@ -171,7 +173,56 @@ class Backloggery
 			
 		submitForm form, stealth_add
 	end
+	
+	#  Adds multiple games 
+	# data's format is 
+	# data = {
+	# 	Console1:{
+	# 		Region1:{
+	# 			complete:[],
+	# 			beaten:[],
+	# 			unfinished:[],
+	# 			unplayed:[],
+	# 			wishlist:[]
+	# 		}	
+	# 	}
+	# }
+	# All keys in data are optional 
+	# Own is 
+	# own={console: status}  e.g :formerly_owned
+	def add_games(user, data, own, rating=4, stealth_add=false)
+		total = 0
+		main_loop(data,own) do |console, region, _status, title,own|
+			unplayed, wishlist = false, false
+			status = _status
 
+			if status == :wishlist then
+				unplayed = true
+				wishlist = true
+				status   = :unfinished
+			elsif status == :unplayed then
+				unplayed = true
+				status   = :unfinished
+			end
+
+			   add_game  user, title,  
+				 console: console,
+				  region: region, 
+				complete: status,   
+				     own: own, 
+				  rating: rating,
+			stealth_add: stealth_add,
+			   unplayed: unplayed,
+			   wishlist: wishlist
+
+			puts "Added %s %s %s %s %s" %[console, region, _status, own, title]
+			total +=1
+			exit
+		end
+		puts "Added #{total} games"
+	end
+	
+	# Delete the specifed game in the given range
 	def delete_in_range(user,lower,upper,stealth_delete=true)
 		(arr=(lower..upper).to_a).map! do |e|
 			"http://www.backloggery.com/update.php?user=#{user}&gameid=#{e}"
@@ -179,6 +230,7 @@ class Backloggery
 		delete arr,stealth_delete
 	end
 
+	# Delete the specifed game
 	def delete(links,stealth_delete=false)
 		text = stealth_delete ? "delete2" : "delete1"
 		links.each do |link|
@@ -205,6 +257,19 @@ class Backloggery
 		results = @agent.submit(form, button)
 	end
 
+	def main_loop(data,own)
+		data.each_pair do |console, regions|
+			_own = own[console]
+			regions.each_pair do |region, progress|
+				progress.each_pair do |status, titles|
+					titles.each do |title|
+						yield console, region, status, title, _own
+					end
+				end
+				sleep 0.01
+			end
+		end
+	end
 	
 	Consoles={
 		"Game Wave Family Entertainment System"  => "GWFES",

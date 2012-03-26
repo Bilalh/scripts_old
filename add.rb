@@ -973,15 +973,28 @@ PC = {
 		],
 		
 		beaten:[
-			
+			"The Elder Scrolls III: Morrowind",
+			"Baldur's Gate II",
+			"Empire Earth",
+			"Evil Twin: Clyprien's Chronicles",
+			"Icewind Dale II",
+			"Anno 1503",
+			"Neverwinter Nights",
+			"Neverwinter Nights: The Shadow of Undrentide",
+			"Neverwinter Nights: Hordes of Underdark",
+			"Morrowind Elder Scrolls 3: Game of the Year Edition",
+			"Neverwinter Nights 2"
 		],
 		
 		unfinished:[
-		
+			"Baldur's Gate",
+			"The Elder Scrolls IV: Oblivion",
+			"The Lord of the Rings: The Battle for Middle-earth",
 		],
 		
 		unplayed:[
-			
+			"Aselia the Eternal",
+			"Dragon Age: Origins"
 		]
 		
 	},
@@ -1045,8 +1058,8 @@ data={
 	# PS3:PS3
 	# DS: DS
 	# PSP: PSP
-	Steam: Steam
-	# PC: PC
+	# Steam: Steam
+	PC: PC
 }
 
 own= {
@@ -1071,48 +1084,6 @@ own= {
 
 b = Backloggery.new
 
-def main_loop(data,own)
-	data.each_pair do |console, regions|
-		_own = own[console]
-		regions.each_pair do |region, progress|
-			progress.each_pair do |status, titles|
-				titles.each do |title|
-					yield console, region, status, title, _own
-				end
-			end
-			sleep 0.01
-		end
-	end
-end
-
-total = 0
-main_loop(data,own) do |console, region, _status, title,own|
-	unplayed, wishlist = false, false
-	status = _status
-	
-	if status == :wishlist then
-		unplayed = true
-		wishlist = true
-		status   = :unfinished
-	elsif status == :unplayed then
-		unplayed = true
-		status   = :unfinished
-	end
-	
-	b.add_game   "bhterra", title,  
-		 console: console,
-		  region: region, 
-		complete: status,   
-		     own: own, 
-		  rating: 4,
-	stealth_add: true,
-	   unplayed: unplayed,
-	   wishlist: wishlist
-	
-	puts "Added %s %s %s %s %s" %[console, region, _status, own, title]
-	total +=1
-end
-puts "Added #{total} games"
-
+b.add_games "bhterra", data, own, 4, true
 
 # b.delete_in_range "bhterra", 5521310, 5521350
