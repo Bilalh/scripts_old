@@ -12,6 +12,8 @@ require 'mechanize'
 
 class Backloggery
 	
+	attr_reader :agent
+	
 	Progress={
 		unfinished: 0,
 		beaten:     1,
@@ -99,12 +101,19 @@ class Backloggery
 		@agent.cookie_jar.load cookies, :cookiestxt
 	end
 	
-	def add_game(user,name,args={})
+	def userpage user
+		@agent.get "http://www.backloggery.com/games.php?user=#{user}"
+	end
+	
+	
+	def add_game(user,title,args={})
+		# puts title
+		# pp args
 		page = @agent.get "http://www.backloggery.com/newgame.php?user=#{user}"
 		form = page.form
 		
 		# name can't be done easily
-		form.field_with(:name => 'name').value =  name
+		form.field_with(:name => 'name').value =  title
 		
 		(args.keys & TextFields).each do |name|
 		 	form[name.to_s] = args[name]
@@ -128,7 +137,7 @@ class Backloggery
 				
 				# Get the index from the value 
 				index = 
-				if val.class == Fixnum then
+				if  name != :rating &&  val.class == Fixnum then
 					val
 				else
 					Mapping[name][val]
@@ -158,7 +167,36 @@ class Backloggery
 		# 	
 		# end
 
-		submitForm form
+		stealth_add = args.has_key?("stealth_add") ? args[stealth_add] : false
+			
+		submitForm form, stealth_add
+	end
+
+	def delete_in_range(user,lower,upper,stealth_delete=true)
+		(arr=(lower..upper).to_a).map! do |e|
+			"http://www.backloggery.com/update.php?user=#{user}&gameid=#{e}"
+		end
+		delete arr,stealth_delete
+	end
+
+	def delete(links,stealth_delete=false)
+		text = stealth_delete ? "delete2" : "delete1"
+		links.each do |link|
+			page = @agent.get link
+			form = page.form
+			next unless form
+			
+			_button =nil
+			form.buttons.each do |button|
+				if button.name==text then
+					_button = button
+					break
+				end
+			end
+
+			@agent.submit(form, _button)
+			puts "Deleted #{link}"
+		end
 	end
 
 	private
@@ -333,7 +371,7 @@ if $0 == __FILE__
 	b = Backloggery.new
 	b.add_game   "bhterra", "Game Name",  
 		 console: :PSP, 
-		complete: :unfinished,   
+		complete: :mastered,   
 		     own: :rented, 
 		  region: :NTSCJ,
 		comments: "Some comments",
@@ -342,7 +380,9 @@ if $0 == __FILE__
 		
 		unplayed: true,
 		 playing: false,
-		 # comp: "Some Compilation"  # Uncommet if in a Compilation
+		 # comp: "Some Compilation",  # Uncommet if in a Compilation
+	stealth_add: true,
+	
 		
   orig_console: :SNES,
 		  online: "Some online info",
