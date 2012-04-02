@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby19 -KU
 # Bilal Hussain
 
-# Allows adding games to Backloggery
+# Allows adding,mass adding, updating and deleting games in Backloggery
 # Requies:
 # Ruby 1.9+
 # Mechanize gem
 # Requires a Backloggery account
-# A cookie for logging in (firefox's format)
+# A cookie for logging in (in firefox's format)
 
 require 'mechanize'
 
@@ -107,72 +107,20 @@ class Backloggery
 		@agent.get "http://www.backloggery.com/games.php?user=#{user}"
 	end
 	
-	
-	# Adds a game 
 	def add_game(user,title,args={})
-		# puts title
-		# pp args
-		page = @agent.get "http://www.backloggery.com/newgame.php?user=#{user}"
-		# page = @agent.get "http://www.backloggery.com/update.php?user=#{user}&gameid=5560813"
-		form = page.form
-		
-		# name can't be done easily
-		form.field_with(:name => 'name').value =  title
-		
-		(args.keys & TextFields).each do |name|
-		 	form[name.to_s] = args[name]
+		args[:title] = title
+		add_update "http://www.backloggery.com/newgame.php?user=#{user}",args
+	end
+	
+	def update_game(user,game_id,args={})
+		add_update "http://www.backloggery.com/update.php?user=#{user}&gameid=#{game_id}",args
+	end
+	
+	def update_in_range(user,lower,upper,args={})
+		(lower..upper).each do |e|
+			puts "updating game ##{e}"
+			update_game  user, e, args
 		end
-		
-		(args.keys & ConsoleFields).each do |name|
-			val  = args[name].to_s
-			val  = Consoles[val] if Consoles.has_key? val
-			form[name.to_s] = val
-		end
-
-		(args.keys & CheckButtons).each do |name|
-			val  = args[name]
-			form.checkbox_with(:name =>  name.to_s).checked = val
-		end
-
-		buttons =  lambda do |allowed,method, &block|
-			(args.keys & allowed).each do |name|
-				val   =  args[name]
-				
-				# Get the index from the value 
-				index = 
-				if  name != :rating &&  val.class == Fixnum then
-					val
-				else
-					Mapping[name][val]
-				end
-
-				button = form.send(method,:name => name.to_s)
-				block.call button, index
-			end
-		end
-		
-		# Radio buttons
-		buttons.call(RadioButtons,:radiobuttons_with) do |button,index|
-			button[index].check
-		end
-		
-		# Selection list
-		buttons.call(SelectionList,:field_with) do |button,index|
-			button.options[index].select
-		end
-		
-		# f = form.field_with(:name => "console")
-		# f.node.children.each_with_index do |node, i|
-		# 	short  = node.attributes["value"].value.inspect
-		# 	name = node.children.text.inspect
-		# 	
-		# 	puts "%30s  => #{short}," % name
-		# 	
-		# end
-
-		stealth_add = args.has_key?(:stealth_add) ? args[:stealth_add] : false
-			
-		submitForm form, stealth_add
 	end
 	
 	#
@@ -253,10 +201,77 @@ class Backloggery
 		end
 	end
 
-	private
+	private	
+	# Adds/updates a game 
+	def add_update(url,args={})
+		# puts title
+		# pp args
+		page = @agent.get url
+		form = page.form
+		(puts "Skipping #{url}"; return) unless form
+		# name can't be done easily
+		if args.has_key?(:title) then
+			form.field_with(:name => 'name').value =  args[:title]
+		end
+		
+		(args.keys & TextFields).each do |name|
+		 	form[name.to_s] = args[name]
+		end
+		
+		(args.keys & ConsoleFields).each do |name|
+			val  = args[name].to_s
+			val  = Consoles[val] if Consoles.has_key? val
+			form[name.to_s] = val
+		end
+
+		(args.keys & CheckButtons).each do |name|
+			val  = args[name]
+			form.checkbox_with(:name =>  name.to_s).checked = val
+		end
+
+		buttons =  lambda do |allowed,method, &block|
+			(args.keys & allowed).each do |name|
+				val   =  args[name]
+				
+				# Get the index from the value 
+				index = 
+				if  name != :rating &&  val.class == Fixnum then
+					val
+				else
+					Mapping[name][val]
+				end
+
+				button = form.send(method,:name => name.to_s)
+				block.call button, index
+			end
+		end
+		
+		# Radio buttons
+		buttons.call(RadioButtons,:radiobuttons_with) do |button,index|
+			button[index].check
+		end
+		
+		# Selection list
+		buttons.call(SelectionList,:field_with) do |button,index|
+			button.options[index].select
+		end
+		
+		# f = form.field_with(:name => "console")
+		# f.node.children.each_with_index do |node, i|
+		# 	short  = node.attributes["value"].value.inspect
+		# 	name = node.children.text.inspect
+		# 	
+		# 	puts "%30s  => #{short}," % name
+		# 	
+		# end
+
+		stealth_add = args.has_key?(:stealth_add) ? args[:stealth_add] : false
+			
+		submitForm form, stealth_add
+	end
+	
 	def submitForm(form,stealth_add=false)
-		pp form.buttons[stealth_add ? 1 : 0]
-		return
+		# pp form.buttons[stealth_add ? 1 : 0]
 		button = form.buttons[stealth_add ? 1 : 0] # stealth add
 		results = @agent.submit(form, button)
 	end
@@ -447,25 +462,34 @@ end
 
 #  Example 
 if $0 == __FILE__
+   
+    b = Backloggery.new
+    b.add_game "bhterra", "A Game Name",  
+      console: :PSP, 
+     complete: :mastered,   
+          own: :rented, 
+       region: :NTSCJ,
+     comments: "Some comments",
+         note: "Some Notes",
+       rating: 5,
+     
+     unplayed: false,
+      playing: false,
+      # comp: "Some Compilation",  # Uncomment if in a Compilation
+  stealth_add: true,
+     wishlist: false,
+  
+ orig_console: :SNES,
+       online: "Some online info",
+     achieve1: 1,   # Number of Achievements
+     achieve2: 2,   # Total number of Achievements
+
+	# Update game with id 5560831 rating to 5
+	# uses the arguments as add_game 
+	# plus :title to change the title
+	# b.update_game "bhterra", 5523152, rating: 0
 	
-	b = Backloggery.new
-	b.add_game   "bhterra", "A Game Name",  
-		 console: :PSP, 
-		complete: :mastered,   
-		     own: :rented, 
-		  region: :NTSCJ,
-		comments: "Some comments",
-		    note: "Some Notes",
-		  rating: 3,
-		
-		unplayed: false,
-		 playing: false,
-		 # comp: "Some Compilation",  # Uncomment if in a Compilation
-	stealth_add: true,
-		wishlist: false,
-	
-  orig_console: :SNES,
-		  online: "Some online info",
-		achieve1: 1,   # Number of Achievements
-		achieve2: 2,   # Total number of Achievements
+	# Update all games in range
+	# b.update_in_range "bhterra", 5521369, 5523151, rating: 0
+
 end
