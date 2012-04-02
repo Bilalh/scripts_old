@@ -113,6 +113,7 @@ class Backloggery
 		# puts title
 		# pp args
 		page = @agent.get "http://www.backloggery.com/newgame.php?user=#{user}"
+		# page = @agent.get "http://www.backloggery.com/update.php?user=#{user}&gameid=5560813"
 		form = page.form
 		
 		# name can't be done easily
@@ -169,11 +170,12 @@ class Backloggery
 		# 	
 		# end
 
-		stealth_add = args.has_key?("stealth_add") ? args[stealth_add] : false
+		stealth_add = args.has_key?(:stealth_add) ? args[:stealth_add] : false
 			
 		submitForm form, stealth_add
 	end
 	
+	#
 	#  Adds multiple games 
 	# data's format is 
 	# data = {
@@ -253,7 +255,9 @@ class Backloggery
 
 	private
 	def submitForm(form,stealth_add=false)
-		button = form.buttons[stealth_add ? 0 : -1] # stealth add
+		pp form.buttons[stealth_add ? 1 : 0]
+		return
+		button = form.buttons[stealth_add ? 1 : 0] # stealth add
 		results = @agent.submit(form, button)
 	end
 
@@ -454,11 +458,11 @@ if $0 == __FILE__
 		    note: "Some Notes",
 		  rating: 3,
 		
-		unplayed: true,
+		unplayed: false,
 		 playing: false,
-		 # comp: "Some Compilation",  # Uncommet if in a Compilation
+		 # comp: "Some Compilation",  # Uncomment if in a Compilation
 	stealth_add: true,
-		wishlist: true	,
+		wishlist: false,
 	
   orig_console: :SNES,
 		  online: "Some online info",
