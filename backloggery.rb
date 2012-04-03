@@ -116,11 +116,16 @@ class Backloggery
 		add_update "http://www.backloggery.com/update.php?user=#{user}&gameid=#{game_id}",args
 	end
 	
-	def update_in_range(user,lower,upper,args={})
-		(lower..upper).each do |e|
+	def update_with_iterable(user,it,args={})
+		it.each do |e|
 			puts "updating game ##{e}"
 			update_game  user, e, args
+			sleep 0.5
 		end
+	end
+	
+	def update_in_range(user,lower,upper,args={})
+		update_with_iterable user (lower..upper), args
 	end
 	
 	#
@@ -179,7 +184,7 @@ class Backloggery
 		end
 		delete arr,stealth_delete
 	end
-
+	
 	# Delete the specifed game
 	def delete(links,stealth_delete=false)
 		text = stealth_delete ? "delete2" : "delete1"
@@ -283,9 +288,9 @@ class Backloggery
 				progress.each_pair do |status, titles|
 					titles.each do |title|
 						yield console, region, status, title, _own
+						sleep 0.01
 					end
 				end
-				sleep 0.01
 			end
 		end
 	end
@@ -464,25 +469,25 @@ end
 if $0 == __FILE__
    
     b = Backloggery.new
-    b.add_game "bhterra", "A Game Name",  
-      console: :PSP, 
-     complete: :mastered,   
-          own: :rented, 
-       region: :NTSCJ,
-     comments: "Some comments",
-         note: "Some Notes",
-       rating: 5,
-     
-     unplayed: false,
-      playing: false,
-      # comp: "Some Compilation",  # Uncomment if in a Compilation
-  stealth_add: true,
-     wishlist: false,
-  
- orig_console: :SNES,
-       online: "Some online info",
-     achieve1: 1,   # Number of Achievements
-     achieve2: 2,   # Total number of Achievements
+ #    b.add_game "bhterra", "A Game Name",  
+ #      console: :PSP, 
+ #     complete: :mastered,   
+ #          own: :rented, 
+ #       region: :NTSCJ,
+ #     comments: "Some comments",
+ #         note: "Some Notes",
+ #       rating: 5,
+ #     
+ #     unplayed: false,
+ #      playing: false,
+ #      # comp: "Some Compilation",  # Uncomment if in a Compilation
+ #  stealth_add: true,
+ #     wishlist: false,
+ #  
+ # orig_console: :SNES,
+ #       online: "Some online info",
+ #     achieve1: 1,   # Number of Achievements
+ #     achieve2: 2,   # Total number of Achievements
 
 	# Update game with id 5560831 rating to 5
 	# uses the arguments as add_game 
@@ -490,6 +495,9 @@ if $0 == __FILE__
 	# b.update_game "bhterra", 5523152, rating: 0
 	
 	# Update all games in range
-	# b.update_in_range "bhterra", 5521369, 5523151, rating: 0
-
+	# b.update_in_range "bhterra", 5523165, 5523526, rating: 0
+	
+	# Update all games in the specifed id
+	# arr=[5523562, 5523513]
+	# b.update_with_iterable "bhterra",arr, rating: 0	
 end
