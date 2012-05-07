@@ -33,6 +33,7 @@ ops = Trollop::options do
 	opt :creation  , "Sort by creation date"
 	opt :plays     , "Sort by play counts"
 	opt :finished  , "Sort by percents played"
+	opt :all       , "Shows all Folders in Directory"
 end
 
 sorter = Sorts[:name]
@@ -67,8 +68,17 @@ arr.each do |track|
 	albums[name] = album
 end
 
-# Printing
+if ops[:all] then
+	Dir["#{DIR_LOCATION}/*/"].each do |f|
+		name = File.basename f
+		unless albums.has_key? name
+			count = Dir["#{DIR_LOCATION}/#{name}/**/*{mp3,m4a,flac}"].length
+			albums[name] = {total_count:0, total_tracks:count,played:0, creation:creation_time("#{DIR_LOCATION}/#{name}")}
+		end
+	end
+end
 
+# Printing
 printf  "%-51s %4s  %4s %3s %s\n", "Album", "Tracks", "Plays", "Played?", "Date"
 albums.sort_by { |k,v| sorter[k,v] }.each do |e|
 	album  = e[0]
