@@ -148,6 +148,8 @@ class Backloggery
 	def add_games(user, data, own, rating=4, stealth_add=false)
 		total = 0
 		main_loop(data,own) do |console, region, _status, title,own|
+			puts "Processing %s %s %s %s %s" %[console, region, _status, own, title]
+			
 			unplayed, wishlist = false, false
 			status = _status
 
@@ -172,7 +174,6 @@ class Backloggery
 
 			puts "Added %s %s %s %s %s" %[console, region, _status, own, title]
 			total +=1
-			exit
 		end
 		puts "Added #{total} games"
 	end

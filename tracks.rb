@@ -20,10 +20,17 @@ DIR_LOCATION="/Users/bilalh/Movies/add"
 require 'open3'
 require 'time'
 def creation_time(file)
-   Time.parse(Open3.popen3("mdls", 
-                          "-name",
-                          "kMDItemFSCreationDate", 
-                          "-raw", file)[1].read)
+	t=Open3.popen3("mdls", 
+                "-name",
+                "kMDItemFSCreationDate", 
+                "-raw", file)[1].read
+		result = nil
+		begin
+			result =Time.parse(t)
+		rescue Exception => e
+			result =nil
+		end
+	 return result
 end
 
 # option parser
@@ -50,7 +57,7 @@ hash = YAML::load File.open YAML_FILE
 
 arr=hash.to_a.map do |e|
 	[e[0].gsub(%r{/Users/bilalh/Movies/add/}, '')
-	    .gsub(%r{^./}, ''),e[1]]
+	     .gsub(%r{^./}, ''),e[1]]
 end.sort
 
 albums = {}
@@ -86,5 +93,5 @@ albums.sort_by { |k,v| sorter[k,v] }.each do |e|
 	
 	printf  "%-54s %3d  %5d %-7s %s\n", album, values[:total_tracks], values[:total_count], 
 	(values[:played] ==values[:total_tracks]) ? "Yes" : "%3d/%-3d" % [values[:played],values[:total_tracks]],
-	values[:creation].strftime('%b %d')
+	values[:creation] ? values[:creation].strftime('%b %d') : "Deleted"
 end
