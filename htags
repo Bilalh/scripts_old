@@ -1,0 +1,1 @@
+hasktags --ctags . && cat tags | sed -E 's/([0-9]+)$/line:\1/g'  > .tmtags && echo "Done"
