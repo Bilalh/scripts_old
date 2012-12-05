@@ -7,4 +7,4 @@ tell application "System Events"
 	keystroke "\n"
 end tell
 
-tell application "TextMate" to activate
+--tell application "TextMate" to activate

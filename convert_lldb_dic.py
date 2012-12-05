@@ -3,6 +3,11 @@ import os
 import re
 import sys
 
+"""
+Conveer the output of an printing a NSDictionary in lldb to 
+NSDictionary literals.
+"""
+
 if len(sys.argv) != 2:
     sys.exit('Usage: %s filename' % sys.argv[0])
 

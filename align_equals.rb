@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby19
+#!/usr/bin/env ruby
 # encoding: UTF-8
 
 # Aigns equals signs in many languages requires ruby 1.9

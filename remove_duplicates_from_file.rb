@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby -wKU
+# encoding: UTF-8
+
 (puts "#{File.basename $0} filename\nPrints the file without the duplicates lines"; exit) unless ARGV.length == 1
 
 lines = IO.read(File.expand_path ARGV[0]).split "\n"

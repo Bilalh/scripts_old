@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby19 -KU
+#!/usr/bin/env ruby -KU
 # Bilal Hussain
 
 # Allows adding,mass adding, updating and deleting games in Backloggery

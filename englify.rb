@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby19
+#!/usr/bin/env ruby
 # englify (converts the artist name to english if posible)
 
 require "englify"

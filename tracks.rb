@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby19 -wKU
+#!/usr/bin/env ruby -wKU
 # Prints out the infomation about playcounts from a specifed YAML file
 # Bilal Syed Hussain
 

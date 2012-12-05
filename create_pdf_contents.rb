@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby19 -wKU
+#!/usr/bin/env ruby -wKU
 # Bilal Syed Hussain 
 # Created the contents of a pdf as json so 
 # that muplin can create the contents
