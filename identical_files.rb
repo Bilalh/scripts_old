@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby -wKU
 require 'digest/md5'
 require 'digest/sha1'
+require "pp"
 
 $BUF_SIZE = 1024*1024*1024
 
@@ -34,15 +35,18 @@ class Folder_Md5
 		total = 0
 		identities = 0
 		# puts 'The List of identical files'
+		# pp @md5_to_files
 		@md5_to_files.each_value do |value|
 				if value.size >= 2
 					identities+=1
 					total+= value.size
 					# puts 'Idenitical files:'
-					value[1..-1].each{|file_name| puts file_name}
+					value.each{|file_name| puts file_name}
+					puts File.readlines(value[0])[2..-1]
+					puts
 				end 
 			end
-		# puts "got #{identities} identities impling #{total} files"
+		puts "got #{identities} identities impling #{total} files"
 	end
 	
 	private	
@@ -78,6 +82,8 @@ class Folder_Md5
 		end	
 end
 
-worker = Folder_Md5.new(ARGV[0])
+(puts "#{File.basename $0} Dir\nPrints identical files"; exit) unless ARGV.length == 1
+
+worker = Folder_Md5.new(ARGV[0]+'/')
 worker.scan
 worker.list_identical

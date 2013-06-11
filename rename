@@ -21,7 +21,7 @@ except Exception,e:
 	
 else:
 	if options.test:
-		lamb = lambda src,dst: "testing: %s:\t%s" % (src,dst)
+		lamb = lambda src,dst: "testing: %-30s\t%s" % (src+":",dst)
 	else:
 		lamb = lambda src,dst: os.rename(src,dst)
 		
@@ -32,7 +32,7 @@ else:
 				dst = regex.sub(args[1],ix)
 				result = lamb(ix,dst)
 				if result == None:
-					result = "%s:\t%s" % (ix,dst)
+					result = "%-30s\t%s" % (ix + ":",dst)
 			except Exception,e:
 				result = e.__doc__
 			print result

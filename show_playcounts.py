@@ -1,5 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+"""
+Shows the stats about audio files that have been played
+"""
+
 from __future__ import division
 import sys
 reload(sys)
@@ -13,8 +18,11 @@ import codecs
 
 # from so
 from ctypes import *
+
+
 class struct_timespec(Structure):
     _fields_ = [('tv_sec', c_long), ('tv_nsec', c_long)]
+
 
 class struct_stat64(Structure):
     _fields_ = [
@@ -43,6 +51,7 @@ def get_creation_time(path):
     if rv != 0:
         raise OSError("Couldn't stat file %r" % path)
     return buf.st_birthtimespec.tv_sec
+##
 
 
 def get_mapping(path):
@@ -147,6 +156,19 @@ def convert_or_delete_unknown(albums):
             update_precent_and_ratio(v2)
     return None
 
+
+def write_single_album(albums,name):
+    data = {k:v for (k,v) in albums.iteritems() if k == name}
+    res = {}
+    for (album,v) in data.iteritems():
+        for (name,count) in v['tracks']:
+            res[os.path.join('/Users/bilalh/Movies/add',album,name)] = count
+
+    with open('/Users/bilalh/Music/extra.yaml',"w") as f:
+        f.write(yaml.dump(res))
+
+    pp(res)
+
 if __name__ == "__main__":
     import argparse
 
@@ -189,7 +211,11 @@ if __name__ == "__main__":
 
     # pp(unknown_totals(albums))
     # print_albums(unknown_totals(albums))
-    convert_or_delete_unknown(albums)m
+    convert_or_delete_unknown(albums)
     print_albums(albums, *func(sorter[selected]))
+
+    want = "Madoka Movie 2 Hikari Furu"
+    write_single_album(albums, want)
+
 
 
