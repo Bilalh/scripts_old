@@ -26,7 +26,7 @@ def get_mapping(path):
 
 
 def convertToTuple(metadata):
-    #pp (metadata)
+    pp (metadata)
     return (metadata[":album"], metadata[":title"], metadata[":artist"],metadata[":track"], metadata[":disc"])
 
 

@@ -113,7 +113,7 @@ def get_directory_data(dname,albums):
 
 def update_precent_and_ratio(album):
     album["pre"] = album['played'] / (album['total'] + 0.001) * 100
-    album["ratio"] = album["plays"] / album["total"]
+    album["ratio"] = album["plays"] / (album['total'] + 0.001)
 
 
 def print_albums(albums,key=None,reverse=False):
@@ -182,9 +182,27 @@ if __name__ == "__main__":
     parser.add_argument('-d','--date',   dest='selected', action='store_const', const='date',    help='Sort by date created')
 
     parser.add_argument('-r','--reverse',dest='rev', action='store_true', help='Reverse Sort')
+    parser.add_argument('-w','--write-single',dest='write_single', help='Write the metadata of a single album')
+
 
     args = parser.parse_args()
+    # pp(args)
 
+    ypath = "/Users/bilalh/Music/playcount.yaml"
+    dname = "/Users/bilalh/Movies/add"
+
+    mapping = get_mapping(ypath)
+    albums = get_album_data(mapping)
+    get_directory_data(dname,albums)
+
+    # pp(unknown_totals(albums))
+    # print_albums(unknown_totals(albums))
+    convert_or_delete_unknown(albums)
+    
+    if args.write_single:
+        write_single_album(albums, args.write_single)
+        exit()
+    
     # Negate the boolean if reverse is selected.
     func = lambda (x,y): (x,y)
     if args.rev:
@@ -201,21 +219,5 @@ if __name__ == "__main__":
         'name': (None,False),
         None: (None,False)
     }
-
-    ypath = "/Users/bilalh/Music/playcount.yaml"
-    dname = "/Users/bilalh/Movies/add"
-
-    mapping = get_mapping(ypath)
-    albums = get_album_data(mapping)
-    get_directory_data(dname,albums)
-
-    # pp(unknown_totals(albums))
-    # print_albums(unknown_totals(albums))
-    convert_or_delete_unknown(albums)
     print_albums(albums, *func(sorter[selected]))
-
-    want = "Madoka Movie 2 Hikari Furu"
-    write_single_album(albums, want)
-
-
 
