@@ -51,7 +51,7 @@ def get_creation_time(path):
     if rv != 0:
         raise OSError("Couldn't stat file %r" % path)
     return buf.st_birthtimespec.tv_sec
-##
+## end
 
 
 def get_mapping(path):
