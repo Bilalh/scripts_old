@@ -13,22 +13,22 @@ parser.add_option("-t","--test",action="store_true",default=False,dest="test",he
 
 if 2 != len(args):
 	parser.error("Incorrect number of arguments.")
-	
+
 try:
 	regex = re.compile(args[0])
 except Exception,e:
 	parser.error("Error parsing $regex_match.")
-	
+
 else:
 	if options.test:
-		lamb = lambda src,dst: "testing: %-30s\t%s" % (src+":",dst)
+		lamb = lambda src,dst: "testing: %-90s\t%s" % (src+":",dst)
 	else:
 		lamb = lambda src,dst: os.rename(src,dst)
-		
+
 	for ix in os.listdir('./'):
 		if re.search(args[0],ix):
 			try:
-			  
+
 				dst = regex.sub(args[1],ix)
 				result = lamb(ix,dst)
 				if result == None:
