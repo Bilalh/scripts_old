@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -wKU
+#!/usr/bin/env ruby -wU
 require 'digest/md5'
 require 'digest/sha1'
 require "pp"

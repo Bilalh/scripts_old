@@ -6,6 +6,6 @@ watchmedo shell-command src \
 	--patterns="*.hs" \
 	--ignore-directories \
 	--recursive \
-	--command='hsfile.sh "${watch_src_path}"'	\
-		| grep -v Compiling 
+	--command='hsfile.sh "${watch_src_path}"'" $@" \
+		| egrep -v 'Compiling|Loading' 
 
