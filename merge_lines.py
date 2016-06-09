@@ -16,7 +16,7 @@ process = True
 while process:
     process = False
     for file in args.files:
-        line=file.readline()
+        line = file.readline()
         if line:
-            print(line.strip())
+            print(line.rstrip())
             process = True
