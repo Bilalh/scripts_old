@@ -60,7 +60,7 @@ function process(){
 		cmd+=("${subs}")
 	fi
 	echo "${cmd[@]}"
-	#"${cmd[@]}"
+	"${cmd[@]}"
 
 	echo "Ending from $PWD"
 }
