@@ -4,8 +4,8 @@ set -o nounset
 set -o errexit
 
 if [ $# -eq 0 ]; then
-	echo "encode_to_webm.sh file -ss -t"
-	echo "encode_to_webm.sh file -ss -t max_vol(dB) out [subs]"
+	echo "encode_to_webm.sh file [start] [end]"
+	echo "encode_to_webm.sh file [start] [end]  adjust_vol(dB) out [subs]"
 	echo "   e.g. b.mkv 00:00:00.700 00:01:27.200"
 	echo "   e.g. b.mkv 00:00:00.700 end"
 	echo "   e.g. b.mkv 00:00:00.700 00:01:27.200 -5.8 out.webm [subs.ssa]"
@@ -20,9 +20,21 @@ file="$1"  #  b.mkv
 ss="$2"    #  00:00:00.700
 
 if [ "$3" != "end" ]; then
-	t="-t $3"     #  00:01:27.200
+
+adjusted=$(ruby <<-RUBY
+require "Time"
+def time_diff(time1_str, time2_str)
+  t = Time.at( Time.parse(time2_str) - Time.parse(time1_str) )
+    (t - t.gmt_offset).strftime('%H:%M:%S.%L')
+end
+print time_diff("${2}","${3}")
+RUBY
+)
+	t="-t ${adjusted}"     #  00:01:27.200
+	echo "Encoding from $2 to $3, duration ${adjusted}"
 else
 	t=""
+	echo "Encoding from $2 to <end>"
 fi
 
 
