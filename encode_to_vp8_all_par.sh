@@ -18,7 +18,7 @@
 
 set -o nounset
 export Vs=${Vs:-"1"}
-echo "using ${Vs} cores"
+echo "Encoding ${Vs} videos at the same time"
 
 function process(){
 
@@ -28,12 +28,19 @@ function process(){
 	fi
 
 	cd  "$dir"
-	echo "Starting from $PWD"
+	echo "Starting($(date +'%a %d %b %Y %k:%M:%S %z')) from $PWD"
 
-	video=$( find . -maxdepth 1 -type f -type f                              \
-		\( -name '*.mkv' -o -name '*.mp4' -o -name '*.wmv' -o -name '*.flv'  \
-			-o -name '*.webm' -o -name '*.mov' \)                            \
+	video=$( find . -maxdepth 1 -type f                                       \
+		\( -name '*.mkv' -o -name '*.mp4' -o -name '*.webm' -o -name '*.flv'  \
+			-o -name '*.wmv' -o -name '*.mov' \)                              \
 		\( -not -name 'out.*' \) )
+
+	if [ -z "${video}" ]; then
+		echo "No video in $dir"
+		exit 43
+	fi
+
+
 	max_vol=$(encode_to_vp8.sh "${video}"  00:00:00.000 end 2>&1 \
 		| grep max_volume | egrep -o -- "-?[0-9]+(\.[0-9]+)? dB" | cut -d ' ' -f 1)
 
@@ -54,18 +61,25 @@ function process(){
 	end="${end:-end}"
 
 	cmd=(encode_to_vp8.sh "${video}" "${begin}" "${end}" "${vol}" out.webm)
-	subs="${video%.*}.ssa"
-	if [ -f "${subs}" ]; then
-		echo "subs is ${subs}"
-		cmd+=("${subs}")
-	fi
+
+	for subs in "${video%.*}.ssa" "${video%.*}.ass"; do
+		if [ -f "${subs}" ]; then
+			echo "subs is ${subs}"
+			cmd+=("${subs}")
+			break
+		fi
+	done
+
 	echo "${cmd[@]}"
 	"${cmd[@]}"
+	code=$?
 
-	echo "Ending from $PWD"
+	echo "Ending($(date +'%a %d %b %Y %k:%M:%S %z')) from $PWD"
+	sleep 60
+	return $code
 }
 export -f process
 
-parallel -j"$Vs" --joblog par.job --tagstring "{}" \
-	"process {} 2>&1 | tee {}/output.log  " \
-	:::: <(find . -maxdepth 1 -type d | sort  )
+parallel -j"$Vs" --resume-failed --halt 2  --joblog par.job --tagstring "{}" \
+	"set -o pipefail; ( process {} 2>&1 | tee {}/output.log ) " \
+	:::: <(find . -maxdepth 1 -type d | sort )
