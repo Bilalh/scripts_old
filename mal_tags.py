@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 # Parses MAL and output the themes in the required form
+# Requires BeautifulSoup & requests
 
 import logging
 import argparse
@@ -61,9 +62,12 @@ tag_values = {
     "BD": 4,
     "VN": 4,
     "360": 6,
+    "396": 6,
     "474": 6,
     "478": 6,
     "480": 6,
+    "600": 6,
+    "624": 6,
     "720": 6,
     "1080": 6,
     "Trans": 8,
@@ -106,7 +110,10 @@ class Theme:
 
     matcher = theme_regex
     if text.count('"') == 1:
-      matcher = theme_regex_missing_quote
+      if text[0] != '"':
+        text = '"' + text
+      else:
+        matcher = theme_regex_missing_quote
 
     match = matcher.match(text)
     fields = match.groupdict()
@@ -131,10 +138,16 @@ def parse_args():
                       action='store_true',
                       dest='search',
                       help='Find id by name')
-  parser.add_argument('-t --table',
+  parser.add_argument(
+      '-t --table',
+      action='store_true',
+      dest='table',
+      help=
+      'Output the series as a nicely formatted markdown table. Requires the tabulate module')
+  parser.add_argument('-u --ugly',
                       action='store_true',
-                      dest='table',
-                      help='Output series as a markdown table')
+                      dest='ugly_table',
+                      help='Output series as a minimal markdown table e.g. for reddit')
   parser.add_argument('tags',
                       nargs='*',
                       choices=sorted(v for v in (tags_map.keys() - {"op", "ed"})),
@@ -160,10 +173,16 @@ def get_url(args):
 
     return term
 
-  search_url = "http://myanimelist.net/search/all"
+  # search all
+  # search_url = "http://myanimelist.net/search/all"
+  # page = requests.get(search_url, params={"q": term})
+  # soup = BeautifulSoup(page.content, "html.parser")
+  # anime_url = soup.select_one('article > div').select_one('a.hoverinfo_trigger')['href']
+
+  search_url = "http://myanimelist.net/anime.php"
   page = requests.get(search_url, params={"q": term})
   soup = BeautifulSoup(page.content, "html.parser")
-  anime_url = soup.select_one('article > div').select_one('a.hoverinfo_trigger')['href']
+  anime_url = soup.select_one('a.hoverinfo_trigger')['href']
   print("    ", anime_url)
   return anime_url
 
@@ -209,9 +228,23 @@ def get_season(soup):
   return ""
 
 
-season = get_season(soup)
+def get_other_titles(soup):
+  other_titles = []
+  english = soup.find(text="English:")
+  if english:
+    other_titles += english.next_element.strip().split(',')
 
-mapping = dict(anime=anime, season=season)
+  synonyms = soup.find(text="Synonyms:")
+  if synonyms:
+    other_titles += synonyms.next_element.strip().split(',')
+
+  return other_titles
+
+
+season = get_season(soup)
+other_titles = get_other_titles(soup)
+
+mapping = dict(anime=anime, season=season, other_titles=other_titles)
 openings = []
 endings = []
 
@@ -240,23 +273,45 @@ def print_individual(data, themes):
         mapping))
 
 
-def print_as_table(data, themes):
+def print_as_table_formatted(data, themes):
   from tabulate import tabulate
   headers = ['Theme title', 'Links', 'Episodes', "Artist", 'Notes']
   rows = []
 
   print('{anime} ({season}) {tags_str}'.format(**data))
-  print("")
+  print()
   print("###[{}]({})".format(data['anime'], url))
+  print("**" + ", ".join(data['other_titles']) + "**")
   print()
   for theme in themes:
-    rows.append(["{}: {}".format(theme.variant(), theme.title), "[Webm \({})]()".format(
+    rows.append(['{} "{}"'.format(theme.variant(), theme.title), "[Webm \({})]()".format(
         data['tags_comma']), theme.eps, theme.artist, ""])
   print(tabulate(rows, headers=headers, tablefmt="pipe"))
+  print()
+
+
+def print_as_table_ugly(data, themes):
+  print('{anime} ({season}) {tags_str}'.format(**data))
+  print("")
+  print("###[{}]({})".format(data['anime'], url))
+  print("**" + ", ".join(data['other_titles']) + "**")
+  print()
+  print("Theme title|Links|Episodes|Notes")
+  print("-|:-:|:-:|:-:|:-:|:-:")
+  rows = []
+  for theme in themes:
+    rows.append(['{} "{}"'.format(theme.variant(), theme.title), "[Webm \({})]()".format(
+        data['tags_comma']), theme.eps, ""])
+
+  for row in rows:
+    print(*row, sep="|")
+
   print("")
 
 
 if args.table:
-  print_as_table(mapping, openings + endings)
+  print_as_table_formatted(mapping, openings + endings)
+elif args.ugly_table:
+  print_as_table_ugly(mapping, openings + endings)
 else:
   print_individual(mapping, openings + endings)
