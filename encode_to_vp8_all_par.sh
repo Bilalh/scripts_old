@@ -54,9 +54,11 @@ function process(){
 	[ -f "ffmpeg2pass-0.log" ] &&  rm "ffmpeg2pass-0.log"
 
 	if [ -f "times" ]; then
-		read -r begin end < <(head "times")
+		# read -r begin end < <(head "times")
+		while read -r  b e ; do begin="$b" ; end="$e"; done <times
 		echo "Using custom times: ${begin} ${end}"
 	fi
+
 	begin="${begin:-00:00:00.000}"
 	end="${end:-end}"
 
@@ -80,18 +82,11 @@ function process(){
 }
 export -f process
 
-
-# Works
-## set -o pipefail; ( process "$dir" 2>&1 | tee "$dir"/output.log )
-# 	/bin/bash -c "process '$dir'"
-# done <_files
-
-
 if [ -f "_files" ]; then
 	echo "Reading file list from _files"
 	parallel -j"$Vs" --resume-failed --halt 2  --joblog par.job --tagstring "{}" \
 		"set -o pipefail; ( process {} 2>&1 | tee {}/output.log ) " \
-		:::: _files
+		 :::: _files
 else
 	echo "Processing each dir"
 	parallel -j"$Vs" --resume-failed --halt 2  --joblog par.job --tagstring "{}" \
