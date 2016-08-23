@@ -80,6 +80,23 @@ function process(){
 }
 export -f process
 
-parallel -j"$Vs" --resume-failed --halt 2  --joblog par.job --tagstring "{}" \
-	"set -o pipefail; ( process {} 2>&1 | tee {}/output.log ) " \
-	:::: <(find . -maxdepth 1 -type d | sort )
+
+# Works
+## set -o pipefail; ( process "$dir" 2>&1 | tee "$dir"/output.log )
+# 	/bin/bash -c "process '$dir'"
+# done <_files
+
+
+if [ -f "_files" ]; then
+	echo "Reading file list from _files"
+	parallel -j"$Vs" --resume-failed --halt 2  --joblog par.job --tagstring "{}" \
+		"set -o pipefail; ( process {} 2>&1 | tee {}/output.log ) " \
+		:::: _files
+else
+	echo "Processing each dir"
+	parallel -j"$Vs" --resume-failed --halt 2  --joblog par.job --tagstring "{}" \
+		"set -o pipefail; ( process {} 2>&1 | tee {}/output.log ) " \
+		:::: <(find . -maxdepth 1 -type d | sort )
+fi
+
+

@@ -75,12 +75,35 @@ if [ -n "${6:-}" ]; then
 		echo "$6 does not exist"
 		exit 1
 	fi
-	ffmpeg -ss "${ss}"  -i "${file}"  ${t} \
-		-pass 2 -c:v libvpx -b:v 2400k -maxrate 3200k -bufsize 6000k -qcomp 0.3 -speed 1 \
-		-g 240 -slices 4 -vf subtitles="$6" \
-		-threads 7 -af "volume=${vol} dB:precision=double" \
-		 -auto-alt-ref 1 -lag-in-frames 25 \
-		-c:a libvorbis -b:a 192k  -map_metadata -1 -sn -f webm -y "${out}"
+
+	if [[  "$ss" = "00:00:00.000" && -z "$t"  ]]; then
+		echo "encoding with subtitles directly"
+		ffmpeg -ss "${ss}"  -i "${file}"  ${t} \
+			-pass 2 -c:v libvpx -b:v 2400k -maxrate 3200k -bufsize 6000k -qcomp 0.3 -speed 1 \
+			 -g 240 -slices 4 -vf subtitles="$6" \
+			-threads 7 -af "volume=${vol} dB:precision=double" \
+			 -auto-alt-ref 1 -lag-in-frames 25 \
+			-c:a libvorbis -b:a 192k  -map_metadata -1 -sn -f webm -y "${out}"
+	else
+		echo "encoding -copyts then remuxing audio, to get correctly timed subtitles"
+
+		echo "encoding audio"
+		ffmpeg -ss "${ss}"  -i "${file}"  ${t} \
+			-sn -map_metadata -1 -c:a libvorbis -b:a 192k "${out}-tmp.mka"
+
+		echo "encoding with subititles using -copyts"
+		ffmpeg -ss "${ss}"  -i "${file}"  ${t} \
+			-copyts -vf "subtitles='$6',setpts=PTS-STARTPTS" \
+			-pass 2 -c:v libvpx -b:v 2400k -maxrate 3200k -bufsize 6000k -qcomp 0.3 -speed 1 \
+			-g 240 -slices 4 \
+			-threads 7 -af "volume=${vol} dB:precision=double" \
+			 -auto-alt-ref 1 -lag-in-frames 25 \
+			-c:a libvorbis -b:a 192k  -map_metadata -1 -sn -f webm -y "${out}-tmp.webm"
+
+		echo "remuxing audio"
+		ffmpeg -i "${out}-tmp.webm" -i "${out}-tmp.mka"  -c copy -map 0:v:0 -map 1:a:0 "${out}"
+		rm "${out}-tmp.webm" "${out}-tmp.mka"
+	fi
 
 else
 	# For encoding picture based subtitles e.g. a   .idx/sub

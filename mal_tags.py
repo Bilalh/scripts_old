@@ -23,7 +23,7 @@ logging.basicConfig(format=logger_format, level=logger_level)
 # extract infomation from the title
 theme_regex = re.compile(
     r"""
-    (?:\#(?P<number>\d+):)?         # Theme Number
+    (?:\#(?P<number>\d+):?)?         # Theme Number
     \s*"(?P<title_>(?P<title>.*?)   # Title
                                     # JPN title
     (?:\s*\((?P<title_jp>[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff
@@ -45,7 +45,7 @@ theme_regex = re.compile(
 # We try a simpler regex to get some infomation
 theme_regex_missing_quote = re.compile(
     r"""
-    (?:\#(?P<number>\d+):)?         # Theme Number
+    (?:\#(?P<number>\d+):?)?         # Theme Number
     \s*"(?P<title_>(?P<title>.*)    # Title
         )"?
     \s*(?:by\s(?P<artist>.*))?      # Artist
@@ -64,8 +64,10 @@ tag_values = {
     "360": 6,
     "396": 6,
     "474": 6,
+    "476": 6,
     "478": 6,
     "480": 6,
+    "576": 6,
     "600": 6,
     "624": 6,
     "720": 6,
@@ -190,6 +192,8 @@ def get_url(args):
 args = parse_args()
 logger.info(args)
 url = get_url(args)
+anime_id = int(re.match(r"http://myanimelist.net/anime/(\d+)", url).group(1))
+
 page = requests.get(url)
 soup = BeautifulSoup(page.content, 'html.parser')
 
@@ -252,7 +256,7 @@ valued_tags = [(tags_map[t], tag_values[tags_map[t]]) for t in args.tags]
 tags = [k for (k, _) in sorted(valued_tags, key=itemgetter(1))]
 mapping['tags'] = tags
 mapping['tags_str'] = "".join("[{}]".format(s) for s in tags)
-mapping['tags_comma'] = ", ".join(tags)
+mapping['tags_comma'] = ", ".join([t for t in tags if t != '720'])
 
 logger.info(mapping)
 
@@ -314,4 +318,5 @@ if args.table:
 elif args.ugly_table:
   print_as_table_ugly(mapping, openings + endings)
 else:
+  print("     mal_tags.py -u {} {}".format(anime_id, " ".join(t.lower() for t in tags)))
   print_individual(mapping, openings + endings)
