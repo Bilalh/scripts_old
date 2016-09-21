@@ -24,8 +24,8 @@ if [ "$3" != "end" ]; then
 adjusted=$(ruby <<-RUBY
 require "Time"
 def time_diff(time1_str, time2_str)
-  t = Time.at( Time.parse(time2_str) - Time.parse(time1_str) )
-    (t - t.gmt_offset).strftime('%H:%M:%S.%L')
+	t = Time.at( Time.parse(time2_str) - Time.parse(time1_str) )
+	(t - t.gmt_offset).strftime('%H:%M:%S.%L')
 end
 print time_diff("${2}","${3}")
 RUBY
@@ -57,6 +57,24 @@ fi
 
 out="$5"
 
+height="$(mediainfo "${file}" --Output='Video;%Height%')"
+echo "height is ${height}"
+if [ "$height" -ge 725 ]; then
+	avg_bit="5000k"
+	max_bit="5600k"
+	slices=8
+elif [ "$height" -ge 485  ]; then
+	avg_bit="3200k"
+	max_bit="3600k"
+	slices=4
+else
+	avg_bit="2400k"
+	max_bit="3200k"
+	slices=2
+fi
+echo "enoding using avg and max bit rate: $avg_bit and $max_bit"
+
+
 if [ "${out}" = "${file}" ]; then
 	echo "input and output can not be the same"
 	exit 4
@@ -64,12 +82,14 @@ fi
 set -x
 if [ !  -f "ffmpeg2pass-0.log" ]; then
 	ffmpeg  -ss "${ss}"  -i "${file}"  ${t} \
-		-pass 1 -c:v libvpx -b:v 2400k -maxrate 3200k -qcomp 0.3 -speed 4 \
-		-g 240 -slices 4 -threads 7   \
+		-pass 1 -c:v libvpx -b:v "${avg_bit}" -maxrate "${max_bit}" -qcomp 0.3 -speed 4 \
+		-g 240 -slices "${slices}" -threads 7   \
 		-auto-alt-ref 1 -lag-in-frames 25 -an  -map_metadata -1 -sn -f webm -y /dev/null
 fi
 
 
+# filter that works well sometimes
+# -vf "hqdn3d=1.5:1.5:6:6,gradfun,unsharp" \
 if [ -n "${6:-}" ]; then
 	if [ ! -f "$6" ]; then
 		echo "$6 does not exist"
@@ -79,10 +99,10 @@ if [ -n "${6:-}" ]; then
 	if [[  "$ss" = "00:00:00.000" && -z "$t"  ]]; then
 		echo "encoding with subtitles directly"
 		ffmpeg -ss "${ss}"  -i "${file}"  ${t} \
-			-pass 2 -c:v libvpx -b:v 2400k -maxrate 3200k -bufsize 6000k -qcomp 0.3 -speed 1 \
-			 -g 240 -slices 4 -vf subtitles="$6" \
+			-pass 2 -c:v libvpx -b:v "${avg_bit}" -maxrate "${max_bit}" -bufsize 6000k -qcomp 0.3 -speed 1 \
+			-g 240 -slices "${slices}" -vf subtitles="$6" \
 			-threads 7 -af "volume=${vol} dB:precision=double" \
-			 -auto-alt-ref 1 -lag-in-frames 25 \
+			-auto-alt-ref 1 -lag-in-frames 25 \
 			-c:a libvorbis -b:a 192k  -map_metadata -1 -sn -f webm -y "${out}"
 	else
 		echo "encoding -copyts then remuxing audio, to get correctly timed subtitles"
@@ -94,10 +114,10 @@ if [ -n "${6:-}" ]; then
 		echo "encoding with subititles using -copyts"
 		ffmpeg -ss "${ss}"  -i "${file}"  ${t} \
 			-copyts -vf "subtitles='$6',setpts=PTS-STARTPTS" \
-			-pass 2 -c:v libvpx -b:v 2400k -maxrate 3200k -bufsize 6000k -qcomp 0.3 -speed 1 \
-			-g 240 -slices 4 \
+			-pass 2 -c:v libvpx -b:v "${avg_bit}" -maxrate "${max_bit}" -bufsize 6000k -qcomp 0.3 -speed 1 \
+			-g 240 -slices "${slices}" \
 			-threads 7 -af "volume=${vol} dB:precision=double" \
-			 -auto-alt-ref 1 -lag-in-frames 25 \
+			-auto-alt-ref 1 -lag-in-frames 25 \
 			-c:a libvorbis -b:a 192k  -map_metadata -1 -sn -f webm -y "${out}-tmp.webm"
 
 		echo "remuxing audio"
@@ -110,9 +130,12 @@ else
 	# -filter_complex "[0:v][0:s]overlay[v]" -map '[v]' -map 0:a  \
 	#  Crop 4:3 out of 16:9 720p
 	# -filter:v "crop=960:720:160:0" \
+	# crop black side bars out of a 480p video
+	# -filter:v "crop=708:480:7:0" \
+	# http://video.stackexchange.com/questions/4563/how-can-i-crop-a-video-with-ffmpeg
 	ffmpeg -ss "${ss}"  -i "${file}"   ${t} \
-		-pass 2 -c:v libvpx -b:v 2400k -maxrate 3200k -bufsize 6000k -qcomp 0.3 -speed 1 \
-		-g 240 -slices 4 \
+		-pass 2 -c:v libvpx -b:v "${avg_bit}" -maxrate "${max_bit}" -bufsize 6000k -qcomp 0.3 -speed 1 \
+		-g 240 -slices "${slices}" \
 		-threads 7 -af "volume=${vol} dB:precision=double" \
 		-auto-alt-ref 1 -lag-in-frames 25 \
 		-c:a libvorbis -b:a 192k  -map_metadata -1 -sn -f webm -y "${out}"

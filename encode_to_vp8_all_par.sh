@@ -32,7 +32,7 @@ function process(){
 
 	video=$( find . -maxdepth 1 -type f                                       \
 		\( -name '*.mkv' -o -name '*.mp4' -o -name '*.webm' -o -name '*.flv'  \
-			-o -name '*.wmv' -o -name '*.mov' \)                              \
+			-o -name '*.wmv' -o -name '*.mov' -o -name '*.avi' \)                   \
 		\( -not -name 'out.*' \) )
 
 	if [ -z "${video}" ]; then
@@ -46,12 +46,12 @@ function process(){
 
 	echo "video is ${video}"
 	echo "maxvol is ${max_vol} Db"
-	#normalising to -0.4dB.
-	vol=$(perl -e "print ((${max_vol} * -1.0) - 0.4)")
-	echo "For normalising to -0.4dB: ${vol} Db"
+	#normalising to -0.8dB.
+	vol=$(perl -e "print ((${max_vol} * -1.0) - 0.8)")
+	echo "For normalising to -0.8dB: ${vol} Db"
 
 
-	[ -f "ffmpeg2pass-0.log" ] &&  rm "ffmpeg2pass-0.log"
+	[[ -z "${KEEP_ffmpeg2pass:-}" &&  -f "ffmpeg2pass-0.log" ]] &&  rm "ffmpeg2pass-0.log"
 
 	if [ -f "times" ]; then
 		# read -r begin end < <(head "times")
