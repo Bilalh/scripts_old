@@ -19,7 +19,7 @@ while process:
     for (i,file) in enumerate(args.files):
         line = file.readline()
         if line:
-            if args.indent and i == 0:
+            if args.indent and i != 0:
                 print(args.indent,end="")
             print(line.rstrip())
             process = True
