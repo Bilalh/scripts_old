@@ -62,7 +62,11 @@ tag_values = {
     "BD": 4,
     "VN": 4,
     "360": 6,
+    "384": 6,
+    "368": 6,
     "396": 6,
+    "432": 6,
+    "448": 6,
     "474": 6,
     "476": 6,
     "478": 6,
@@ -71,6 +75,7 @@ tag_values = {
     "600": 6,
     "624": 6,
     "720": 6,
+    "960": 6,
     "1080": 6,
     "Trans": 8,
     "Over": 10,
@@ -192,7 +197,7 @@ def get_url(args):
 args = parse_args()
 logger.info(args)
 url = get_url(args)
-anime_id = int(re.match(r"http://myanimelist.net/anime/(\d+)", url).group(1))
+anime_id = int(re.match(r"https?://myanimelist.net/anime/(\d+)", url).group(1))
 
 page = requests.get(url)
 soup = BeautifulSoup(page.content, 'html.parser')
@@ -299,15 +304,26 @@ def print_as_table_ugly(data, themes):
   print("")
   print("###[{}]({})".format(data['anime'], url))
   print("**" + ", ".join(data['other_titles']) + "**")
-  print()
-  print("Theme title|Links|Episodes|Notes")
-  print("-|:-:|:-:|:-:|:-:|:-:")
+
   rows = []
+  subs_rows = []
   for theme in themes:
     rows.append(['{} "{}"'.format(theme.variant(), theme.title), "[Webm \({})]()".format(
         data['tags_comma']), theme.eps, ""])
+    subs_rows.append(['{} "{}"'.format(theme.variant(), theme.title), "[Subs]()", ""])
 
+  print()
+  print("Theme title|Links|Episodes|Notes")
+  print("-|:-:|:-:|:-:|:-:|:-:")
   for row in rows:
+    print(*row, sep="|")
+
+  print()
+  print("Subs")
+  print()
+  print("Theme title|Link")
+  print("-|:-:|")
+  for row in subs_rows:
     print(*row, sep="|")
 
   print("")
