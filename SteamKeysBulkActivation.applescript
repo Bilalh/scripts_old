@@ -16,11 +16,15 @@ tell application "System Events"
 		
 		-- Search for the Steam Keys in the page content
 		set steam_keys to {}
+		set do_process to true
 		repeat with possible_key in paragraphs of page_contents
 			-- Check if it is a Key
+			
+												
 			if (possible_key's length) is greater than 9 and (possible_key's length) is less than 32 then
 				set only_right_characters to true
 				set contains_letter to false
+				set extra_checks to do_process
 				repeat with key_char in the characters of possible_key
 					considering case
 						if key_char is not in the characters of "ABCDEFGHIJKLMNOPQRSTUVWXYZ-0123456789_" then
@@ -31,7 +35,10 @@ tell application "System Events"
 						end if
 					end considering
 				end repeat
-				if only_right_characters and contains_letter then
+				if possible_key as string is equal to "ROCKETSROCKETSROCKETS" as string then
+					set extra_checks to false
+				end if
+				if extra_checks and only_right_characters and contains_letter then
 					copy possible_key as string to the end of steam_keys
 				end if
 			end if

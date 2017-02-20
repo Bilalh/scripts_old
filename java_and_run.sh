@@ -1,9 +1,10 @@
 #!/bin/bash
 set -o nounset
+name="$1"
+shift
 
-pushd "$(dirname "$1")" &>/dev/null
-
-javac "${1}" && java "${1%.*}"
+pushd "$(dirname "$name")" &>/dev/null
+javac "${name}" && java "${name%.*}" "$@"
 
 popd &>/dev/null
 
