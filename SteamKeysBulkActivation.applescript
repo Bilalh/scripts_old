@@ -1,3 +1,4 @@
+
 #!/usr/bin/osascript
 -- Activates all Steam keys' bundle from an opened web page into Steam.
 -- Intended to use for Humble Bundle automation.
@@ -20,7 +21,7 @@ tell application "System Events"
 		repeat with possible_key in paragraphs of page_contents
 			-- Check if it is a Key
 			
-												
+			
 			if (possible_key's length) is greater than 9 and (possible_key's length) is less than 32 then
 				set only_right_characters to true
 				set contains_letter to false
@@ -35,14 +36,22 @@ tell application "System Events"
 						end if
 					end considering
 				end repeat
-				if possible_key as string is equal to "ROCKETSROCKETSROCKETS" as string then
+				
+				if possible_key as string is equal to "3D6GD-AGDEV-JT2A4" as string then
 					set extra_checks to false
 				end if
+				
 				if extra_checks and only_right_characters and contains_letter then
 					copy possible_key as string to the end of steam_keys
 				end if
 			end if
 		end repeat
+		
+		
+(*
+		set steam_keys to {"2RYMX-FJXX0-BG3AK", "322G2-AQGI0-DWN0T", "35RCV-PHQ4B-2IMWC", "2NRMY-E03DR-B8B58"}
+*)
+		
 		
 		-- Making sure keys are loaded
 		if steam_keys's length is 0 then
@@ -54,6 +63,8 @@ Please, make sure correct site's page is loaded and keys are visible." with titl
 			exit repeat
 		end if
 	end repeat
+	
+	
 	
 	-- Starting Steam and asking user for confirmation
 	activate steam_application
@@ -142,12 +153,18 @@ Please wait..." with title "Loading Steam keys" buttons {"Cancel"} cancel button
 				if (count of (windows whose name is "Product Activation")) is not 0 then
 					set successes to 0
 					keystroke return
+					
+				else if (count of (windows whose name is "Steam - Game Unavailable")) is not 0 then
+					keystroke return
+					set successes to 1
 				else if (count of (windows whose name starts with "Install")) is not 0 then
 					key code 53
-					exit repeat
+					set successes to 1
+					my BigDelay()
 				end if
 				set successes to successes + 1
 				my SmallDelay()
+				my BigDelay()
 			end repeat
 		end tell
 	end repeat
